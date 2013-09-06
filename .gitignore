@@ -4,3 +4,4 @@ Gemfile.lock
 pkg/*
 *.iml
 .idea/*
+neo4j

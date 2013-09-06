@@ -20,8 +20,8 @@ module ActiveNode
       define_model_callbacks :save, :create, :update, :destroy
     end
 
-    def destroy #:nodoc:
-      run_callbacks(:destroy) { super }
+    def destroy include_relationships=false
+      run_callbacks(:destroy) { super include_relationships }
     end
 
     def touch(*) #:nodoc:

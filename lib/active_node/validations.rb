@@ -1,13 +1,61 @@
 module ActiveNode
+  # = Active Node RecordInvalid
+  #
+  # Raised by <tt>save!</tt> and <tt>create!</tt> when the record is invalid. Use the
+  # +record+ method to retrieve the record which did not validate.
+  #
+  #   begin
+  #     complex_operation_that_calls_save!_internally
+  #   rescue ActiveRecord::RecordInvalid => invalid
+  #     puts invalid.record.errors
+  #   end
+  class RecordInvalid < ActiveNodeError
+    attr_reader :record # :nodoc:
+    def initialize(record) # :nodoc:
+      @record = record
+      errors = @record.errors.full_messages.join(", ")
+      super(I18n.t(:"#{@record.class.i18n_scope}.errors.messages.record_invalid", :errors => errors, :default => :"errors.messages.record_invalid"))
+    end
+  end
+
+  # = Active Node Validations
+  #
+  # Active Node includes the majority of its validations from <tt>ActiveModel::Validations</tt>
+  # all of which accept the <tt>:on</tt> argument to define the context where the
+  # validations are active. Active Node will always supply either the context of
+  # <tt>:create</tt> or <tt>:update</tt> dependent on whether the model is a
+  # <tt>new_record?</tt>.
+
   module Validations
     extend ActiveSupport::Concern
     include ActiveModel::Validations
+
+    module ClassMethods
+      # Creates an object just like Base.create but calls <tt>save!</tt> instead of +save+
+      # so an exception is raised if the record is invalid.
+      def create!(attributes = nil, &block)
+        if attributes.is_a?(Array)
+          attributes.collect { |attr| create!(attr, &block) }
+        else
+          object = new(attributes)
+          yield(object) if block_given?
+          object.save!
+          object
+        end
+      end
+    end
 
     # The validation process on save can be skipped by passing <tt>validate: false</tt>.
     # The regular Base#save method is replaced with this when the validations
     # module is mixed in, which it is by default.
     def save(options={})
       perform_validations(options) ? super : false
+    end
+
+    # Attempts to save the record just like Base#save but will raise a +RecordInvalid+
+    # exception instead of returning +false+ if the record is not valid.
+    def save!(options={})
+      perform_validations(options) ? super : raise(RecordInvalid.new(self))
     end
 
     # Runs all the validations within the specified context. Returns +true+ if
