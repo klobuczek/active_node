@@ -39,6 +39,33 @@ module ActiveNode
       def klass
         reflection.klass
       end
+
+      def load_target
+        owner.send(reflection.direction, reflection.type, reflection.klass)
+      end
+
+      # Implements the reader method, e.g. foo.items for Foo.has_many :items
+      def reader(force_reload = false)
+        @target ||= load_target
+      end
+
+      # Implements the writer method, e.g. foo.items= for Foo.has_many :items
+      def writer(records)
+        @dirty = true
+        @target = records
+      end
+
+      def save
+        return unless @dirty
+        #delete all relations missing in new target
+        owner.node.rels(reflection.type).send(reflection.direction).each do |rel|
+          rel.del unless ids_reader.include? rel.other_node(owner.node).neo_id.to_i
+        end
+        original_target = owner.node.send(reflection.direction, reflection.type)
+        original_target_ids = original_target.map(&:neo_id).map(&:to_i)
+        #add relations missing in old target
+        target_each { |n| original_target << n.node unless original_target_ids.include? n.id }
+      end
     end
   end
 end

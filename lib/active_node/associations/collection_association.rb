@@ -26,17 +26,6 @@ module ActiveNode
     # +load_target+ and the +loaded+ flag are your friends.
     class CollectionAssociation < Association #:nodoc:
 
-      # Implements the reader method, e.g. foo.items for Foo.has_many :items
-      def reader(force_reload = false)
-        @target ||= load_target
-      end
-
-      # Implements the writer method, e.g. foo.items= for Foo.has_many :items
-      def writer(records)
-        @dirty = true
-        @target = records
-      end
-
       # Implements the ids reader method, e.g. foo.item_ids for Foo.has_many :items
       def ids_reader
         reader.map(&:id)
@@ -47,20 +36,8 @@ module ActiveNode
         writer klass.find(ids.reject(&:blank?).map!(&:to_i))
       end
 
-      def load_target
-        owner.send(reflection.direction, reflection.type, reflection.klass)
-      end
-
-      def save
-        return unless @dirty
-        #delete all relations missing in new target
-        owner.node.rels(reflection.type).send(reflection.direction).each do |rel|
-          rel.del unless ids_reader.include? rel.other_node(owner.node).neo_id.to_i
-        end
-        original_target = owner.node.send(reflection.direction, reflection.type)
-        original_target_ids = original_target.map(&:neo_id).map(&:to_i)
-        #add relations missing in old target
-        @target.each { |n| original_target << n.node unless original_target_ids.include? n.id }
+      def target_each
+        target.each {|n| yield n}
       end
 
       def reset

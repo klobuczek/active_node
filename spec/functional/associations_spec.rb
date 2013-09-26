@@ -73,5 +73,18 @@ describe ActiveNode::Associations do
       id = Person.create!(children: [Person.create!, Person.create!]).id
       Person.find(id).children.size.should == 2
     end
+
+    it 'can set has_one relation' do
+      father = Person.create!
+      child = Person.create!
+      child.father = father
+      child.save
+      father.children.should == [child]
+    end
+
+    it 'can handle has_one reverse relationship' do
+      father = Person.create!(children: [Person.create!])
+      father.children.first.father.should == father
+    end
   end
 end

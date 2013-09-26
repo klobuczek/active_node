@@ -4,7 +4,7 @@ module ActiveNode::Associations::Builder
       attr_accessor :valid_options
     end
 
-    self.valid_options = [:class_name]
+    self.valid_options = [:direction, :type, :class_name]
 
     attr_reader :model, :name, :options, :reflection
 

@@ -1,7 +1,7 @@
 module ActiveNode::Associations::Builder
-  class HasMany < CollectionAssociation #:nodoc:
+  class HasOne < SingularAssociation #:nodoc:
     def macro
-      :has_many
+      :has_one
     end
   end
 end
