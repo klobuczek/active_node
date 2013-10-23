@@ -92,6 +92,13 @@ describe ActiveNode::Associations do
       father.children.should == [child]
     end
 
+    it "can access new association without being saved" do
+      father = Person.create!
+      child = Person.new
+      child.father = father
+      child.father.should == father
+    end
+
     it 'can handle has_one reverse relationship' do
       father = Person.create!(children: [Person.create!])
       father.children.first.father.should == father
