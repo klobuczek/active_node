@@ -31,6 +31,11 @@ describe ActiveNode::Persistence do
     it "should persist attributes" do
       Person.create!(name: 'abc').name.should == 'abc'
     end
+
+    it "should persist array properties" do
+      person = Person.create!(multi: [1, 2, 3])
+      Person.find(person.id).multi.should == [1, 2, 3]
+    end
   end
 
   describe "#attributes" do
