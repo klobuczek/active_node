@@ -2,7 +2,7 @@ module ActiveNode
   module Associations
     class SingularAssociation < Association #:nodoc:
       def load_target
-        super.first
+        super.try :first
       end
 
       def target_each

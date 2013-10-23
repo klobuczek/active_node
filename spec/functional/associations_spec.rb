@@ -37,6 +37,16 @@ describe ActiveNode::Associations do
       client.user_ids.should be_empty
     end
 
+    it "returns nil on a has_one association for a brand spanking new model object" do
+      person = Person.new
+      person.father.should be_nil
+    end
+
+    it "returns nil on a has_one association where nothing is associated" do
+      person = Person.create!
+      person.father.should be_nil
+    end
+
     it "can remove some of the associated objects" do
       child1 = Person.create!
       child2 = Person.create!
@@ -80,6 +90,13 @@ describe ActiveNode::Associations do
       child.father = father
       child.save
       father.children.should == [child]
+    end
+
+    it "can access new association without being saved" do
+      father = Person.create!
+      child = Person.new
+      child.father = father
+      child.father.should == father
     end
 
     it 'can handle has_one reverse relationship' do
