@@ -5,3 +5,4 @@ pkg/*
 *.iml
 .idea/*
 neo4j
+coverage
