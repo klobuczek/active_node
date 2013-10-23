@@ -26,4 +26,16 @@ describe ActiveNode::Persistence do
       Person.all.count.should == 2
     end
   end
+
+  describe "#create!" do
+    it "should persist attributes" do
+      Person.create!(name: 'abc').name.should == 'abc'
+    end
+  end
+
+  describe "#attributes" do
+    it "should include id" do
+      Person.create!(name: 'abc').attributes['id'].should_not be_nil
+    end
+  end
 end

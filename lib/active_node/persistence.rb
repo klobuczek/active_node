@@ -2,6 +2,10 @@ module ActiveNode
   module Persistence
     extend ActiveSupport::Concern
 
+    included do
+      attribute :id
+    end
+
     module ClassMethods
       def find ids
         ids.is_a?(Enumerable) ? ids.map { |id| find(id) } : new_instance(Neography::Node.load(ids))
@@ -40,13 +44,14 @@ module ActiveNode
     def id
       neo_id && neo_id.to_i
     end
-
     alias :to_param :id
     alias :persisted? :id
+
     alias :[] :send
 
-    def initialize hash={}
-      @node, hash = hash, hash.send(:table) if hash.is_a? Neography::Node
+    def initialize object={}
+      hash=object
+      @node, hash = object, object.send(:table) if object.is_a? Neography::Node
       super hash
     end
 
