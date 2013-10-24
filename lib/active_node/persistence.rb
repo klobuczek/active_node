@@ -31,6 +31,10 @@ module ActiveNode
         klass && klass < ActiveNode::Base && klass || default_klass
       end
 
+      def filterClass(nodes, klass)
+        wrap(nodes.select{|node| klass.nil? || node.type == klass.name.underscore}, klass)
+      end
+
       private
       def new_instance node
         node && new(node)
@@ -76,14 +80,18 @@ module ActiveNode
     end
 
     def incoming(types=nil, klass=nil)
-      node && self.class.wrap(node.incoming(types), klass)
+      related(:incoming, types, klass)
     end
 
     def outgoing(types=nil, klass=nil)
-      node && self.class.wrap(node.outgoing(types), klass)
+      related(:outgoing, types, klass)
     end
 
     private
+    def related(direction, types, klass)
+      node && self.class.filterClass(node.send(direction, types), klass)
+    end
+
     def destroy_associations include_associations
       rels = node.rels
       return false unless rels.empty? || include_associations

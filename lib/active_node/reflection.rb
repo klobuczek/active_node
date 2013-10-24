@@ -19,9 +19,9 @@ module ActiveNode
     module ClassMethods
       def create_reflection(macro, name, options, model)
         case macro
-        when :has_many, :has_one
-          klass = options[:through] ? ThroughReflection : AssociationReflection
-          reflection = klass.new(macro, name, options, model)
+          when :has_many, :has_one
+            klass = options[:through] ? ThroughReflection : AssociationReflection
+            reflection = klass.new(macro, name, options, model)
         end
 
         self.reflections = self.reflections.merge(name => reflection)
@@ -91,9 +91,9 @@ module ActiveNode
 
 
       def initialize(macro, name, options, model)
-        @macro         = macro
-        @name          = name
-        @options       = options
+        @macro = macro
+        @name = name
+        @options = options
         @model = model
       end
 
@@ -118,44 +118,48 @@ module ActiveNode
       end
 
       def type
-        @type ||= (options[:type] || name.to_s.singularize)
+        @type ||= (options[:type] || derive_type)
       end
 
       # Returns +true+ if +self+ and +other_aggregation+ have the same +name+ attribute, +model+ attribute,
       # and +other_aggregation+ has an options hash assigned to it.
       def ==(other_aggregation)
         super ||
-          other_aggregation.kind_of?(self.class) &&
-          name == other_aggregation.name &&
-          other_aggregation.options &&
-          model == other_aggregation.model
+            other_aggregation.kind_of?(self.class) &&
+                name == other_aggregation.name &&
+                other_aggregation.options &&
+                model == other_aggregation.model
       end
 
       private
-        def derive_class_name
-          name.to_s.camelize
-        end
+      def derive_class_name
+        name.to_s.camelize
+      end
+
+      def derive_type
+        direction == :outgoing ? name.to_s.singularize : @model.name.underscore
+      end
     end
 
 
     # Holds all the meta-data about an association as it was specified in the
     # Active Record class.
     class AssociationReflection < MacroReflection #:nodoc:
-      # Returns the target association's class.
-      #
-      #   class Author < ActiveRecord::Base
-      #     has_many :books
-      #   end
-      #
-      #   Author.reflect_on_association(:books).klass
-      #   # => Book
-      #
-      # <b>Note:</b> Do not call +klass.new+ or +klass.create+ to instantiate
-      # a new association object. Use +build_association+ or +create_association+
-      # instead. This allows plugins to hook into association object creation.
-      #def klass
-      #  @klass ||= model.send(:compute_type, class_name)
-      #end
+                                                  # Returns the target association's class.
+                                                  #
+                                                  #   class Author < ActiveRecord::Base
+                                                  #     has_many :books
+                                                  #   end
+                                                  #
+                                                  #   Author.reflect_on_association(:books).klass
+                                                  #   # => Book
+                                                  #
+                                                  # <b>Note:</b> Do not call +klass.new+ or +klass.create+ to instantiate
+                                                  # a new association object. Use +build_association+ or +create_association+
+                                                  # instead. This allows plugins to hook into association object creation.
+                                                  #def klass
+                                                  #  @klass ||= model.send(:compute_type, class_name)
+                                                  #end
 
       def initialize(*args)
         super
@@ -204,27 +208,27 @@ module ActiveNode
 
       def association_class
         case macro
-        when :has_many
-          if options[:through]
-            Associations::HasManyThroughAssociation
-          else
-            Associations::HasManyAssociation
-          end
-        when :has_one
-          if options[:through]
-            Associations::HasOneThroughAssociation
-          else
-            Associations::HasOneAssociation
-          end
+          when :has_many
+            if options[:through]
+              Associations::HasManyThroughAssociation
+            else
+              Associations::HasManyAssociation
+            end
+          when :has_one
+            if options[:through]
+              Associations::HasOneThroughAssociation
+            else
+              Associations::HasOneAssociation
+            end
         end
       end
 
       private
-        def derive_class_name
-          class_name = name.to_s.camelize
-          class_name = class_name.singularize if collection?
-          class_name
-        end
+      def derive_class_name
+        class_name = name.to_s.camelize
+        class_name = class_name.singularize if collection?
+        class_name
+      end
     end
 
     # Holds all the meta-data about a :through association as it was specified
