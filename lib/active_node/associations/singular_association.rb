@@ -12,6 +12,10 @@ module ActiveNode
       def ids_reader
         [target.try(:id)].compact
       end
+
+      def id_writer(id)
+        writer(klass.find(id.to_i))
+      end
     end
   end
 end

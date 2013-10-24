@@ -15,5 +15,15 @@ module ActiveNode::Associations::Builder
         end
       CODE
     end
+
+    def define_writers
+      super
+
+      mixin.class_eval <<-CODE, __FILE__, __LINE__ + 1
+        def #{name}_id=(value)
+          association(:#{name}).id_writer(value)
+        end
+      CODE
+    end
   end
 end
