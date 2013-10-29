@@ -100,6 +100,14 @@ describe ActiveNode::Associations do
       father.children.should == [child]
     end
 
+    it 'can read has_one relation by id' do
+      father = Person.create!
+      child = Person.create!
+      child.father = father
+      child.save
+      child.father_id.should == father.id
+    end
+
     it "can access new association without being saved" do
       father = Person.create!
       child = Person.new
