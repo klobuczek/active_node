@@ -16,6 +16,16 @@ module ActiveNode::Associations::Builder
       CODE
     end
 
+    def define_readers
+      super
+
+      mixin.class_eval <<-CODE, __FILE__, __LINE__ + 1
+        def #{name}_id
+          association(:#{name}).id_reader
+        end
+      CODE
+    end
+
     def define_writers
       super
 

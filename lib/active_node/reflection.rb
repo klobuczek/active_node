@@ -133,7 +133,7 @@ module ActiveNode
 
       private
       def derive_class_name
-        name.to_s.camelize
+        (direction == :outgoing ? type : name).to_s.camelize
       end
 
       def derive_type

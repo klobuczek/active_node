@@ -7,6 +7,11 @@ module ActiveNode
     end
 
     module ClassMethods
+      def timestamps
+        attribute :created_at, type: String
+        attribute :updated_at, type: String
+      end
+
       def find ids
         ids.is_a?(Enumerable) ? ids.map { |id| find(id) } : new_instance(Neography::Node.load(ids))
       end
@@ -32,26 +37,24 @@ module ActiveNode
       end
 
       def filterClass(nodes, klass)
-        wrap(nodes.select{|node| klass.nil? || node.type == klass.name.underscore}, klass)
+        wrap(nodes.select { |node| klass.nil? || node.type == klass.name.underscore }, klass)
       end
 
       private
       def new_instance node
-        node && new(node)
+        new(node) if node.try(:type) == type
       end
     end
 
     attr_reader :node
-    #protected :node
-
     delegate :neo_id, to: :node, allow_nil: true
+
     def id
       neo_id && neo_id.to_i
     end
+
     alias :to_param :id
     alias :persisted? :id
-
-    alias :[] :send
 
     def initialize object={}
       hash=object
@@ -100,7 +103,7 @@ module ActiveNode
     end
 
     def nullify_blanks! attrs
-      attrs.each { |k, v| attrs[k]=nil if attrs[k].blank? }
+      attrs.each { |k, v| attrs[k]=nil if v.blank? }
     end
 
     def create_or_update
@@ -109,10 +112,13 @@ module ActiveNode
     end
 
     def write
+      now = Time.now.utc.iso8601(3)
+      try :updated_at=, now
       if @node
-        nullify_blanks!(attributes).each { |k, v| @node[k]=v }
+        nullify_blanks!(self.attributes).each { |k, v| @node[k]=v }
       else
-        @node = Neography::Node.create nullify_blanks!(attributes).merge(type: self.class.type)
+        try :created_at=, now
+        @node = Neography::Node.create nullify_blanks!(self.attributes).merge!(type: self.class.type)
       end
     end
   end

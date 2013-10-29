@@ -25,6 +25,23 @@ describe ActiveNode::Persistence do
       person.destroy!.should be_true
       Person.all.count.should == 2
     end
+
+    it 'should record timestamp' do
+      now = Time.now
+      person = Person.create!
+      person.created_at.should_not be_nil
+      person = Person.find(person.id)
+      person.created_at.should_not be_nil
+      person.updated_at.should_not be_nil
+      allow(Time).to receive(:now) {now + 1.second}
+      person.name = 'abc'
+      person.save
+      (person.created_at < person.updated_at).should be_true
+    end
+
+    it 'should not record timestamp if not specified' do
+      Client.create!(name: 'abc').respond_to?(:created_at).should be_false
+    end
   end
 
   describe "#create!" do
@@ -35,6 +52,10 @@ describe ActiveNode::Persistence do
     it "should persist array properties" do
       person = Person.create!(multi: [1, 2, 3])
       Person.find(person.id).multi.should == [1, 2, 3]
+    end
+
+    it 'should not find an object with id of a different model' do
+      Client.find(Person.create!.id).should be_nil
     end
   end
 

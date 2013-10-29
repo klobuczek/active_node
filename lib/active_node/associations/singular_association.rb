@@ -10,7 +10,11 @@ module ActiveNode
       end
 
       def ids_reader
-        [target.try(:id)].compact
+        [id_reader].compact
+      end
+
+      def id_reader
+        target.try :id
       end
 
       def id_writer(id)
