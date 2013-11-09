@@ -17,13 +17,17 @@ describe ActiveNode::Associations do
     end
 
     it "can set association by id" do
-      user = NeoUser.new(name: 'Heinrich')
-      user.save
-      client = Client.new(name: 'a', user_ids: [user.id])
-      client.save
+      user = NeoUser.create!(name: 'Heinrich')
+      client = Client.create!(name: 'a', user_ids: [user.id])
       client.users.should == [user]
       client.user_ids.should == [user.id]
       client.users.first.clients.first.should == client
+      client.user_ids = []
+      client.save
+      Client.find(client.id).users.should == []
+      client.user_ids = [user.id]
+      client.save
+      Client.find(client.id).users.should == [user]
     end
 
     it "can remove associated objects" do

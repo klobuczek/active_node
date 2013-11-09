@@ -37,7 +37,7 @@ module ActiveNode
       end
 
       def filterClass(nodes, klass)
-        wrap(nodes.select { |node| klass.nil? || node.type == klass.name.underscore }, klass)
+        wrap(nodes, klass).select { |model| model.instance_of? klass }
       end
 
       private
@@ -48,6 +48,8 @@ module ActiveNode
 
     attr_reader :node
     delegate :neo_id, to: :node, allow_nil: true
+
+    alias :[] :send
 
     def id
       neo_id && neo_id.to_i
