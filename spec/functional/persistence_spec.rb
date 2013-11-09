@@ -33,7 +33,7 @@ describe ActiveNode::Persistence do
       person = Person.find(person.id)
       person.created_at.should_not be_nil
       person.updated_at.should_not be_nil
-      allow(Time).to receive(:now) {now + 1.second}
+      allow(Time).to receive(:now) { now + 1.second }
       person.name = 'abc'
       person.save
       (person.created_at < person.updated_at).should be_true
@@ -62,6 +62,15 @@ describe ActiveNode::Persistence do
   describe "#attributes" do
     it "should include id" do
       Person.create!(name: 'abc').attributes['id'].should_not be_nil
+    end
+  end
+
+  describe "#incoming" do
+    it "can retrieve heterogenous models" do
+      a = Address.create!
+      p=Person.create!(name: 'abc', address: a)
+      c=Client.create!(name: 'client', address: a)
+      a.incoming(:address).should include(p, c)
     end
   end
 end

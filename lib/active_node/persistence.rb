@@ -37,7 +37,7 @@ module ActiveNode
       end
 
       def filterClass(nodes, klass)
-        wrap(nodes, klass).select { |model| model.instance_of? klass }
+        wrap(nodes, klass).select { |model| klass.nil? || model.instance_of?(klass) }
       end
 
       private

@@ -7,4 +7,5 @@ class Person < ActiveNode::Base
   has_many :children, class_name: "Person"
   #has_many :sons, class_name: "Person"
   has_one :father, type: :child, direction: :incoming, class_name: "Person"
+  has_one :address
 end
