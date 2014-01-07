@@ -60,7 +60,7 @@ module ActiveNode
 
     def initialize object={}
       hash=object
-      @node, hash = object, object.send(:table) if object.is_a? Neography::Node
+      @node, hash = object, declared_attributes_only(object.send(:table)) if object.is_a? Neography::Node
       super hash
     end
 
@@ -93,6 +93,10 @@ module ActiveNode
     end
 
     private
+    def declared_attributes_only hash
+      hash.try(:select) { |k, _| self.class.attribute_names.include? k.to_s }
+    end
+
     def related(direction, types, klass)
       node && self.class.filterClass(node.send(direction, types), klass)
     end

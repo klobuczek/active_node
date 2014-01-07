@@ -36,7 +36,7 @@ RSpec.configure do |c|
   #end
   c.before(:each) do
     @neo=Neography::Rest.new
-    @neo.execute_query("START n0=node(0),nx=node(*) MATCH n0-[r0?]-(),nx-[rx?]-() WHERE nx <> n0 DELETE r0,rx,nx")
+    @neo.execute_query("MATCH (n) OPTIONAL MATCH (n)-[r]-() DELETE n,r")
     @neo.set_node_auto_index_status(true)
     @neo.add_node_auto_index_property('type')
   end

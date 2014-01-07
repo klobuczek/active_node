@@ -7,6 +7,16 @@ describe ActiveNode::Persistence do
       NeoUser.all.map(&:name).should == ['Heinrich']
     end
 
+    it "should save object with non attribute properties with a name of a relationship" do
+      child = Person.create!
+      person = Person.create! children: [child]
+      person.node[:children] = "Bob"
+      person = Person.find person.id
+      person.save
+      person.node[:children].should == "Bob"
+      person.children.should == [child]
+    end
+
     it 'should destroy node' do
       user = NeoUser.create!(name: 'abc')
       NeoUser.all.count.should == 1
