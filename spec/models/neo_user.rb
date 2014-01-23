@@ -3,7 +3,7 @@ class NeoUser < ActiveNode::Base
   has_many :clients
   validates :name, presence: true
 
-  def self.type
-    'user'
+  def self.label
+    'User'
   end
 end

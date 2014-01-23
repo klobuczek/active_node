@@ -9,6 +9,7 @@ module ActiveNode
   autoload :Validations
   autoload :Reflection
   autoload :VERSION
+  autoload :Neo
 
   eager_autoload do
     autoload :ActiveNodeError, 'active_node/errors'

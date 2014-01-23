@@ -1,8 +1,12 @@
+require 'active_support/core_ext/hash/indifferent_access'
+
 module ActiveNode
   module Persistence
     extend ActiveSupport::Concern
+    include Neography::Rest::Helpers
 
     included do
+      extend Neography::Rest::Helpers
       attribute :id
     end
 
@@ -13,22 +17,20 @@ module ActiveNode
       end
 
       def find ids
-        ids.is_a?(Enumerable) ? ids.map { |id| find(id) } : new_instance(Neography::Node.load(ids))
+        array = new_instances(Neo.db.get_nodes([ids].flatten))
+        ids.is_a?(Array) ? array : array.first
       end
 
       def all
-        result = Neography::Node.find(:node_auto_index, :type, type)
-        (result.is_a?(Enumerable) ? result : [result]).map { |node| new_instance(node) }.compact
+        new_instances(Neo.db.get_nodes_labeled(label), self)
       end
 
-      def type
-        name.underscore
+      def label
+        name
       end
 
       def wrap node, klass=nil
-        node.is_a?(Enumerable) ?
-            node.map { |n| wrap(n, klass) } :
-            node.is_a?(Neography::Node) && (active_node_class(node.type.camelize, klass)).try(:new, node) || node
+        node.is_a?(Array) ? new_instances(node, klass) : new_instance(node, klass)
       end
 
       def active_node_class(class_name, default_klass=nil)
@@ -36,32 +38,51 @@ module ActiveNode
         klass && klass < ActiveNode::Base && klass || default_klass
       end
 
-      def filterClass(nodes, klass)
-        wrap(nodes, klass).select { |model| klass.nil? || model.instance_of?(klass) }
-      end
-
       private
-      def new_instance node
-        new(node) if node.try(:type) == type
+      def new_instance node, klass=nil
+        (klass || find_suitable_class(Neo.db.get_node_labels(node))).try(:new, data(node), :declared?)
+      end
+
+      def data hash
+        hash['data'].merge(id: get_id(hash).to_i)
+      end
+
+      def new_instances nodes, klass=nil
+        nodes.map { |node| new_instance(node, klass) }.compact
+      end
+
+      def find_suitable_class labels
+        labels.include?(label) ? self : labels.map { |l| active_node_class(l) }.compact.first
       end
     end
 
-    attr_reader :node
-    delegate :neo_id, to: :node, allow_nil: true
-
-    alias :[] :send
-
-    def id
-      neo_id && neo_id.to_i
+    def [](attr)
+      declared?(attr) ? send(attr) : @hash[attr]
     end
 
-    alias :to_param :id
-    alias :persisted? :id
+    def []=(attr, value)
+      if declared? attr
+        send "#{attr}=", value
+      else
+        @hash[attr]=value
+      end
+    end
 
-    def initialize object={}
-      hash=object
-      @node, hash = object, declared_attributes_only(object.send(:table)) if object.is_a? Neography::Node
-      super hash
+    def neo_id
+      id
+    end
+
+    def to_param
+      id
+    end
+
+    def persisted?
+      id
+    end
+
+    def initialize hash={}, split_by=:respond_to_writer?
+      super(split_hash hash, :select, split_by)
+      @hash=(split_hash(hash, :reject, split_by) || {}).with_indifferent_access
     end
 
     def new_record?
@@ -76,7 +97,7 @@ module ActiveNode
 
     def destroy include_relationships=false
       destroyable = destroy_associations include_relationships
-      node.del if destroyable
+      Neo.db.delete_node(id) if destroyable
       @destroyed = destroyable
     end
 
@@ -84,32 +105,39 @@ module ActiveNode
       destroy true
     end
 
-    def incoming(types=nil, klass=nil)
-      related(:incoming, types, klass)
+    def incoming(type=nil, klass=nil)
+      related(:incoming, type, klass)
     end
 
-    def outgoing(types=nil, klass=nil)
-      related(:outgoing, types, klass)
+    def outgoing(type=nil, klass=nil)
+      related(:outgoing, type, klass)
     end
 
     private
-    def declared_attributes_only hash
-      hash.try(:select) { |k, _| self.class.attribute_names.include? k.to_s }
+    def split_hash hash, method, split_by
+      hash.try(method) { |k, _| send split_by, k }
     end
 
-    def related(direction, types, klass)
-      node && self.class.filterClass(node.send(direction, types), klass)
+    def declared? attr
+      self.class.attribute_names.include? attr.to_s
+    end
+
+    def respond_to_writer? attr
+      respond_to? "#{attr}="
+    end
+
+    def related(direction, type, klass)
+      data = id ?
+          Neo.db.execute_query(
+              "start n=node({id}) match (n)#{'<' if direction == :incoming}-[:#{type}]-#{'>' if direction == :outgoing}(m#{":#{klass.label}" if klass}) return m",
+              id: id)['data'].map(&:first) :
+          []
+      self.class.wrap(data, klass)
     end
 
     def destroy_associations include_associations
-      rels = node.rels
-      return false unless rels.empty? || include_associations
-      rels.each { |rel| rel.del }
-      true
-    end
-
-    def nullify_blanks! attrs
-      attrs.each { |k, v| attrs[k]=nil if v.blank? }
+      rels=Neo.db.get_node_relationships(id)
+      rels.nil? || rels.empty? || include_associations && rels.each { |rel| Neo.db.delete_relationship(rel) }
     end
 
     def create_or_update
@@ -120,12 +148,25 @@ module ActiveNode
     def write
       now = Time.now.utc.iso8601(3)
       try :updated_at=, now
-      if @node
-        nullify_blanks!(self.attributes).each { |k, v| @node[k]=v }
+      if persisted?
+        write_properties
       else
         try :created_at=, now
-        @node = Neography::Node.create nullify_blanks!(self.attributes).merge!(type: self.class.type)
+        create_node_with_label
       end
+    end
+
+    def create_node_with_label
+      self.id = get_id(Neo.db.create_node(all_attributes)).to_i
+      Neo.db.set_label(id, self.class.label)
+    end
+
+    def write_properties
+      Neo.db.reset_node_properties(id, all_attributes.select { |_, v| v.present? })
+    end
+
+    def all_attributes
+      attributes.merge(@hash)
     end
   end
 end

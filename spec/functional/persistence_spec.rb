@@ -2,6 +2,11 @@ require 'spec_helper'
 
 describe ActiveNode::Persistence do
   describe "#save" do
+    it "should save an object" do
+      a=Address.create!
+      Address.find(a.id).should == a
+    end
+
     it "should save not conventionally named object" do
       NeoUser.new(name: 'Heinrich').save.should be_true
       NeoUser.all.map(&:name).should == ['Heinrich']
@@ -10,10 +15,10 @@ describe ActiveNode::Persistence do
     it "should save object with non attribute properties with a name of a relationship" do
       child = Person.create!
       person = Person.create! children: [child]
-      person.node[:children] = "Bob"
-      person = Person.find person.id
+      person[:children] = "Bob"
       person.save
-      person.node[:children].should == "Bob"
+      person = Person.find person.id
+      person[:children].should == "Bob"
       person.children.should == [child]
     end
 
@@ -64,8 +69,8 @@ describe ActiveNode::Persistence do
       Person.find(person.id).multi.should == [1, 2, 3]
     end
 
-    it 'should not find an object with id of a different model' do
-      Client.find(Person.create!.id).should be_nil
+    it 'should find an object with id of a different model' do
+      Client.find(Person.create!.id).class.should == Person
     end
   end
 
