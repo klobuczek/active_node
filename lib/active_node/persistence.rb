@@ -21,6 +21,10 @@ module ActiveNode
         ids.is_a?(Array) ? array : array.first
       end
 
+      def find_by_cypher query, params={}, klass=nil
+        wrap(Neo.db.execute_query(query, params)['data'].map(&:first), klass)
+      end
+
       def all
         new_instances(Neo.db.get_nodes_labeled(label), self)
       end
@@ -127,12 +131,11 @@ module ActiveNode
     end
 
     def related(direction, type, klass)
-      data = id ?
-          Neo.db.execute_query(
+      id ?
+          self.class.find_by_cypher(
               "start n=node({id}) match (n)#{'<' if direction == :incoming}-[:#{type}]-#{'>' if direction == :outgoing}(m#{":#{klass.label}" if klass}) return m",
-              id: id)['data'].map(&:first) :
+              {id: id}, klass) :
           []
-      self.class.wrap(data, klass)
     end
 
     def destroy_associations include_associations

@@ -6,7 +6,7 @@ module ActiveNode
       end
 
       def target_each
-        yield target
+        yield target if target.present?
       end
 
       def ids_reader
@@ -18,7 +18,7 @@ module ActiveNode
       end
 
       def id_writer(id)
-        writer(klass.find(id.to_i))
+        writer(id.blank? ? nil : klass.find(id.to_i))
       end
     end
   end

@@ -104,6 +104,26 @@ describe ActiveNode::Associations do
       father.children.should == [child]
     end
 
+    it 'can set has_one relationship by id at creation time' do
+      father = Person.create!
+      child = Person.create! father_id: father.id
+      father.children.should == [child]
+    end
+
+    it 'does not set has_one relationship by id if id is blank' do
+      father = Person.create!
+      child = Person.create! father_id: nil
+      father.children.should be_empty
+    end
+
+    it 'can remove has_one relationship' do
+      father = Person.create!
+      child = Person.create! father: father
+      child.father = nil
+      child.save
+      Person.find(child.id).father.should be_nil
+    end
+
     it 'can read has_one relation by id' do
       father = Person.create!
       child = Person.create!

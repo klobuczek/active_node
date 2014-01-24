@@ -10,5 +10,9 @@ module ActiveNode
     include Associations
     include Reflection
     include Core
+
+    def self.subclass(klass_name)
+      Class.new(super_class=self) { define_singleton_method(:label) { klass_name } }
+    end
   end
 end
