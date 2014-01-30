@@ -10,6 +10,7 @@ module ActiveNode
   autoload :Reflection
   autoload :VERSION
   autoload :Neo
+  autoload :Relationship
 
   eager_autoload do
     autoload :ActiveNodeError, 'active_node/errors'

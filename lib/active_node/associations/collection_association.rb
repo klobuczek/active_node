@@ -26,20 +26,6 @@ module ActiveNode
     # +load_target+ and the +loaded+ flag are your friends.
     class CollectionAssociation < Association #:nodoc:
 
-      # Implements the ids reader method, e.g. foo.item_ids for Foo.has_many :items
-      def ids_reader
-        reader.map(&:id)
-      end
-
-      # Implements the ids writer method, e.g. foo.item_ids= for Foo.has_many :items
-      def ids_writer(ids)
-        writer klass.find(ids.reject(&:blank?).map!(&:to_i))
-      end
-
-      def target_each
-        target.each {|n| yield n}
-      end
-
       def reset
         super
         @target = owner.new_record? ? [] : nil

@@ -23,6 +23,10 @@ module ActiveNode::Associations::Builder
         def #{name}_id
           association(:#{name}).id_reader
         end
+
+        def #{name}_rel
+          association(:#{name}).rel_reader
+        end
       CODE
     end
 
@@ -32,6 +36,10 @@ module ActiveNode::Associations::Builder
       mixin.class_eval <<-CODE, __FILE__, __LINE__ + 1
         def #{name}_id=(value)
           association(:#{name}).id_writer(value)
+        end
+
+        def #{name}_rel=(value)
+          association(:#{name}).rel_writer(value)
         end
       CODE
     end

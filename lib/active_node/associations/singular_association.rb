@@ -1,24 +1,28 @@
 module ActiveNode
   module Associations
     class SingularAssociation < Association #:nodoc:
-      def load_target
+      def reader
         super.try :first
       end
 
-      def target_each
-        yield target if target.present?
-      end
-
-      def ids_reader
-        [id_reader].compact
-      end
-
       def id_reader
-        target.try :id
+        ids_reader.try :first
       end
 
       def id_writer(id)
-        writer(id.blank? ? nil : klass.find(id.to_i))
+        ids_writer([id].compact)
+      end
+
+      def rel_reader
+        rels_reader.try :first
+      end
+
+      def rel_writer(rel)
+        rels_writer([rel].compact)
+      end
+
+      def writer(record)
+        super([record].compact)
       end
     end
   end

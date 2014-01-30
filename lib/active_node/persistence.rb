@@ -37,6 +37,10 @@ module ActiveNode
         node.is_a?(Array) ? new_instances(node, klass) : new_instance(node, klass)
       end
 
+      def wrap_rel rel, node, klass
+        ActiveNode::Relationship.new wrap(node, klass), rel['data'].merge(id: get_id(rel).to_i)
+      end
+
       def active_node_class(class_name, default_klass=nil)
         klass = Module.const_get(class_name) rescue nil
         klass && klass < ActiveNode::Base && klass || default_klass
@@ -115,6 +119,14 @@ module ActiveNode
 
     def outgoing(type=nil, klass=nil)
       related(:outgoing, type, klass)
+    end
+
+    def relationships(direction, type, klass)
+      id ?
+          Neo.db.execute_query(
+              "start n=node({id}) match (n)#{'<' if direction == :incoming}-[r:#{type}]-#{'>' if direction == :outgoing}(m#{":#{klass.label}" if klass}) return r, m order by m.created_at",
+              {id: id})['data'].map {|rel_node| self.class.wrap_rel *rel_node, klass} :
+          []
     end
 
     private

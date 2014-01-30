@@ -40,32 +40,68 @@ module ActiveNode
         reflection.klass
       end
 
-      def load_target
-        owner.send(reflection.direction, reflection.type, reflection.klass)
-      end
 
-      # Implements the reader method, e.g. foo.items for Foo.has_many :items
-      def reader(force_reload = false)
-        @target ||= load_target
+      def rel
+        owner.relationships(reflection.direction, reflection.type, reflection.klass)
       end
 
       # Implements the writer method, e.g. foo.items= for Foo.has_many :items
       def writer(records)
         @dirty = true
+        @rel_target = nil
         @target = records
+      end
+      alias :super_writer :writer
+
+      # Implements the ids writer method, e.g. foo.item_ids= for Foo.has_many :items
+      def ids_writer(ids)
+        @rel_target = nil
+        super_writer klass.find(ids.reject(&:blank?).map!(&:to_i))
+      end
+
+      def reader
+        @target ||= rels_reader.map &:other
+      end
+
+      # Implements the ids reader method, e.g. foo.item_ids for Foo.has_many :items
+      def ids_reader
+        reader
+        @target.map(&:id)
+      end
+
+
+      def rels_reader
+        @rel_target ||= rel
+      end
+
+      def rels_writer(rels)
+        @target = nil
+        @dirty = true
+        @rel_target = rels
       end
 
       def save
-        return unless @dirty
+        #return unless @dirty
         #delete all relations missing in new target
-        node = Neography::Node.load(owner.id)
-        node.rels(reflection.type).send(reflection.direction).each do |rel|
-          rel.del unless ids_reader.include? rel.other_node(node).neo_id.to_i
+        original_rels = rel
+        original_rels.each do |r|
+          unless ids_reader.include? r.other.id
+            Neo.db.delete_relationship(r.id)
+            original_rels.delete(r)
+          end
         end
-        original_target = node.send(reflection.direction, reflection.type)
-        original_target_ids = original_target.map(&:neo_id).map(&:to_i)
+
         #add relations missing in old target
-        target_each { |n| original_target << n.id unless original_target_ids.include? n.id }
+        #if no rel_target proceed as before + set rel_target from db
+        #if rel_target exists update persisted records and insert new records
+        if @rel_target
+          @rel_target.each { |r| r.save(self) }
+        else
+          @target.map do |n|
+            original_rels.detect { |r| r.other.id == n.id }.tap { |o_r| o_r.try :other=, n } ||
+                ActiveNode::Relationship.create!(n, self)
+          end
+        end
       end
     end
   end

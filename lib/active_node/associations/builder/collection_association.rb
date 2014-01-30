@@ -9,6 +9,10 @@ module ActiveNode::Associations::Builder
         def #{name.to_s.singularize}_ids
           association(:#{name}).ids_reader
         end
+
+        def #{name.to_s.singularize}_rels
+          association(:#{name}).rels_reader
+        end
       CODE
     end
 
@@ -18,6 +22,10 @@ module ActiveNode::Associations::Builder
       mixin.class_eval <<-CODE, __FILE__, __LINE__ + 1
         def #{name.to_s.singularize}_ids=(ids)
           association(:#{name}).ids_writer(ids)
+        end
+
+        def #{name.to_s.singularize}_rels=(ids)
+          association(:#{name}).rels_writer(ids)
         end
       CODE
     end

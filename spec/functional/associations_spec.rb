@@ -143,5 +143,34 @@ describe ActiveNode::Associations do
       father = Person.create!(children: [Person.create!])
       father.children.first.father.should == father
     end
+
+    it 'returns relationships to related nodes' do
+      child1 = Person.create!
+      child2 = Person.create!
+      person = Person.create! child_ids: [child1.id, child2.id]
+      person.save
+      person = Person.find(person.id)
+      person.child_rels.map(&:other).should == person.children
+    end
+
+    it 'relationship should include property' do
+      client = Client.create! name: 'Heinrich'
+      client.address_rel=ActiveNode::Relationship.new(Address.create!, address_type: 'home')
+      client.save
+      client = Client.find(client.id)
+      client.address_rel[:address_type].should == 'home'
+    end
+
+    it 'should save updated property on relationship' do
+      client = Client.create! name: 'Heinrich'
+      client.address_rel=ActiveNode::Relationship.new(Address.create!, address_type: 'home')
+      client.save
+      client = Client.find(client.id)
+      client.address_rel[:address_type]='office'
+      client.save
+      client=Client.find(client.id)
+      ar=client.address_rel
+      ar[:address_type].should == 'office'
+    end
   end
 end
