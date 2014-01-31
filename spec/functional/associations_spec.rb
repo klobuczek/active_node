@@ -172,5 +172,11 @@ describe ActiveNode::Associations do
       ar=client.address_rel
       ar[:address_type].should == 'office'
     end
+
+    it 'should retrieve multiple relationships at once' do
+      address = Address.create!
+      person = Person.create! children: [Person.create!(address: address)]
+      Person.find(person.id).children(:address).first.address.should == address
+    end
   end
 end

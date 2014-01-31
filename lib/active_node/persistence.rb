@@ -121,15 +121,51 @@ module ActiveNode
       related(:outgoing, type, klass)
     end
 
-    def relationships(direction, type, klass)
+    def relationships(reflection, *associations)
       id ?
           Neo.db.execute_query(
-              "start n=node({id}) match (n)#{'<' if direction == :incoming}-[r:#{type}]-#{'>' if direction == :outgoing}(m#{":#{klass.label}" if klass}) return r, m order by m.created_at",
-              {id: id})['data'].map {|rel_node| self.class.wrap_rel *rel_node, klass} :
+              "start n=node({id}) match #{match reflection}#{optional_match reflection, associations} return #{list_with_rel reflection.name, *associations} order by #{created_at_list reflection.name, *associations}",
+              {id: id})['data'].map { |rel_node| self.class.wrap_rel rel_node[0], rel_node[1], reflection.klass } :
           []
     end
 
     private
+    def parse_result klass, result, associations
+      node_map = {}
+      result.each do |record|
+        (node_map[extract_id(record[1])] ||= wrap_rel(record[0], record[1], klass))
+      end
+    end
+
+    def extract_id(id)
+      get_id(id).to_i
+    end
+
+    def match(reflection, start_var='n')
+      "(#{start_var})#{'<' if reflection.direction == :incoming}-[#{reflection.name}_rel:#{reflection.type}]-#{'>' if reflection.direction == :outgoing}(#{reflection.name}#{label reflection.klass})"
+    end
+
+    def optional_match reflection, associations
+      return if associations.empty?
+      " optional match " + comma_sep_list(associations.map { |association| match(reflection.klass.reflect_on_association(association), association) })
+    end
+
+    def label klass
+      ":#{klass.label}" if klass
+    end
+
+    def list_with_rel *names
+      comma_sep_list names.map { |name| ["#{name}_rel", name] }.flatten
+    end
+
+    def comma_sep_list *items
+      items.join(', ')
+    end
+
+    def created_at_list *names
+      comma_sep_list names.map { |name| "#{name}.created_at" }
+    end
+
     def split_hash hash, method, split_by
       hash.try(method) { |k, _| send split_by, k }
     end
@@ -156,8 +192,9 @@ module ActiveNode
     end
 
     def create_or_update
+      fresh = new_record?
       write; true
-      association_cache.values.each &:save
+      association_cache.values.each { |assoc| assoc.save(fresh) }
     end
 
     def write
@@ -183,5 +220,6 @@ module ActiveNode
     def all_attributes
       attributes.merge(@hash)
     end
+
   end
 end

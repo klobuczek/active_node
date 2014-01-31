@@ -41,8 +41,8 @@ module ActiveNode
       end
 
 
-      def rel
-        owner.relationships(reflection.direction, reflection.type, reflection.klass)
+      def rel(*associations)
+        owner.relationships(reflection, *associations)
       end
 
       # Implements the writer method, e.g. foo.items= for Foo.has_many :items
@@ -59,8 +59,8 @@ module ActiveNode
         super_writer klass.find(ids.reject(&:blank?).map!(&:to_i))
       end
 
-      def reader
-        @target ||= rels_reader.map &:other
+      def reader(*args)
+        @target ||= rels_reader(*args).map &:other
       end
 
       # Implements the ids reader method, e.g. foo.item_ids for Foo.has_many :items
@@ -70,8 +70,8 @@ module ActiveNode
       end
 
 
-      def rels_reader
-        @rel_target ||= rel
+      def rels_reader(*args)
+        @rel_target ||= rel(*args)
       end
 
       def rels_writer(rels)
@@ -80,10 +80,10 @@ module ActiveNode
         @rel_target = rels
       end
 
-      def save
+      def save(fresh=false)
         #return unless @dirty
         #delete all relations missing in new target
-        original_rels = rel
+        original_rels = fresh ? [] : rel
         original_rels.each do |r|
           unless ids_reader.include? r.other.id
             Neo.db.delete_relationship(r.id)
