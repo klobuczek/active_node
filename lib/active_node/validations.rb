@@ -27,8 +27,11 @@ module ActiveNode
   # <tt>new_record?</tt>.
 
   module Validations
+    extend ActiveSupport::Autoload
     extend ActiveSupport::Concern
     include ActiveModel::Validations
+
+    autoload :UniquenessValidator, 'active_node/validations/uniqueness_validator'
 
     module ClassMethods
       # Creates an object just like Base.create but calls <tt>save!</tt> instead of +save+
