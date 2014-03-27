@@ -28,8 +28,6 @@ Neography.configure do |config|
   config.password           = nil
   config.parser             = MultiJsonParser
   end
-  
-@neo=Neography::Rest.new
 
 class NeoUser < ActiveNode::Base
   attribute :name, type: String
