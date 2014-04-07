@@ -11,6 +11,7 @@ module ActiveNode
   autoload :VERSION
   autoload :Neo
   autoload :Relationship
+  autoload :Graph
 
   eager_autoload do
     autoload :ActiveNodeError, 'active_node/errors'

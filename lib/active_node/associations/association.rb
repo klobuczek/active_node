@@ -17,7 +17,7 @@ module ActiveNode
     #       HasManyAssociation
     #         HasManyThroughAssociation + ThroughAssociation
     class Association #:nodoc:
-      attr_reader :owner, :target, :reflection
+      attr_reader :owner, :target, :rel_target, :reflection
 
       delegate :options, :to => :reflection
 
@@ -51,6 +51,7 @@ module ActiveNode
         @rel_target = nil
         @target = records
       end
+
       alias :super_writer :writer
 
       # Implements the ids writer method, e.g. foo.item_ids= for Foo.has_many :items
@@ -71,7 +72,8 @@ module ActiveNode
 
 
       def rels_reader(*args)
-        @rel_target ||= rel(*args)
+        rel(*args) unless @rel_target
+        @rel_target ||= []
       end
 
       def rels_writer(rels)
@@ -83,7 +85,7 @@ module ActiveNode
       def save(fresh=false)
         #return unless @dirty
         #delete all relations missing in new target
-        original_rels = fresh ? [] : rel
+        original_rels = fresh ? [] : ActiveNode::Graph::Builder.new(owner.class, reflection.name).build(owner.id).first.association(reflection.name).rels_reader
         original_rels.each do |r|
           unless ids_reader.include? r.other.id
             Neo.db.delete_relationship(r.id)

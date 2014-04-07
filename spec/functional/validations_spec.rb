@@ -15,5 +15,11 @@ describe ActiveNode::Validations do
       Person.create! name: 'abc'
       Person.new(name: 'abc').should_not be_valid
     end
+
+    it "should validate presence on has_one" do
+      House.new.should_not be_valid
+      house = House.create! address_id: Address.create!.id
+      House.find(house.id).should be_valid
+    end
   end
 end

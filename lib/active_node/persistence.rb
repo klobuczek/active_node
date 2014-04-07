@@ -38,7 +38,11 @@ module ActiveNode
       end
 
       def wrap_rel rel, node, klass
-        ActiveNode::Relationship.new wrap(node, klass), rel['data'].merge(id: get_id(rel).to_i)
+        create_rel rel, wrap(node, klass)
+      end
+
+      def create_rel rel, node
+        ActiveNode::Relationship.new node, rel['data'].merge(id: get_id(rel).to_i)
       end
 
       def active_node_class(class_name, default_klass=nil)
@@ -122,50 +126,10 @@ module ActiveNode
     end
 
     def relationships(reflection, *associations)
-      id ?
-          Neo.db.execute_query(
-              "start n=node({id}) match #{match reflection}#{optional_match reflection, associations} return #{list_with_rel reflection.name, *associations} order by #{created_at_list reflection.name, *associations}",
-              {id: id})['data'].map { |rel_node| self.class.wrap_rel rel_node[0], rel_node[1], reflection.klass } :
-          []
+      ActiveNode::Graph::Builder.new(self.class, reflection.name => associations).build(self)
     end
 
     private
-    def parse_result klass, result, associations
-      node_map = {}
-      result.each do |record|
-        (node_map[extract_id(record[1])] ||= wrap_rel(record[0], record[1], klass))
-      end
-    end
-
-    def extract_id(id)
-      get_id(id).to_i
-    end
-
-    def match(reflection, start_var='n')
-      "(#{start_var})#{'<' if reflection.direction == :incoming}-[#{reflection.name}_rel:#{reflection.type}]-#{'>' if reflection.direction == :outgoing}(#{reflection.name}#{label reflection.klass})"
-    end
-
-    def optional_match reflection, associations
-      return if associations.empty?
-      " optional match " + comma_sep_list(associations.map { |association| match(reflection.klass.reflect_on_association(association), association) })
-    end
-
-    def label klass
-      ":#{klass.label}" if klass
-    end
-
-    def list_with_rel *names
-      comma_sep_list names.map { |name| ["#{name}_rel", name] }.flatten
-    end
-
-    def comma_sep_list *items
-      items.join(', ')
-    end
-
-    def created_at_list *names
-      comma_sep_list names.map { |name| "#{name}.created_at" }
-    end
-
     def split_hash hash, method, split_by
       hash.try(method) { |k, _| send split_by, k }
     end
