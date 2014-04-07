@@ -85,6 +85,11 @@ describe ActiveNode::Persistence do
       person = Person.create!
       person.to_param.should == person.id.to_s
     end
+
+    it "should return nil if the id is nil" do
+      person = Person.new
+      person.to_param.should be_nil
+    end
   end
 
   describe "#incoming" do

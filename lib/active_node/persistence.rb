@@ -81,7 +81,7 @@ module ActiveNode
     end
 
     def to_param
-      id.to_s
+      id.to_s if persisted?
     end
 
     def persisted?
