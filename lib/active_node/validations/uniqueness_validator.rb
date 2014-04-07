@@ -10,10 +10,11 @@ module ActiveNode
       private
 
       def other_matching_records(record, attribute, value)
+        record_class = record.class
         if record.persisted?
-          record.class.find_by_cypher("Match (n:#{record.class.label}) where n.#{attribute} = {value} and n.id <> {id} return n", value: value, id: record.id)
+          record_class.find_by_cypher "Match (n:#{record_class.label}) where n.#{attribute} = {value} and id(n) <> {id} return n", value: value, id: record.id
         else
-          record.class.find_by_cypher("Match (n:#{record.class.label}) where n.#{attribute} = {value} return n", value: value)
+          record_class.find_by_cypher "Match (n:#{record_class.label}) where n.#{attribute} = {value} return n", value: value
         end
       end
     end
