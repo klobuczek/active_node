@@ -85,7 +85,7 @@ module ActiveNode
     end
 
     def persisted?
-      id
+      id.present?
     end
 
     def initialize hash={}, split_by=:respond_to_writer?

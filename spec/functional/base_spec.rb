@@ -15,4 +15,6 @@ describe ActiveNode::Base do
       ActiveNode::Base.subclass('Person').find(p.id)[:name].should == p.name
     end
   end
+
+  it_behaves_like "ActiveModel"
 end
