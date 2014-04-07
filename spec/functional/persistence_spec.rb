@@ -80,6 +80,13 @@ describe ActiveNode::Persistence do
     end
   end
 
+  describe "#to_param" do
+    it "should return a string version of the id" do
+      person = Person.create!
+      person.to_param.should == person.id.to_s
+    end
+  end
+
   describe "#incoming" do
     it "can retrieve heterogenous models" do
       a = Address.create!
