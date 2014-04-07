@@ -81,7 +81,7 @@ module ActiveNode
     end
 
     def to_param
-      id
+      id.to_s
     end
 
     def persisted?
