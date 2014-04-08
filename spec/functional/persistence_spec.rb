@@ -106,6 +106,24 @@ describe ActiveNode::Persistence do
     end
   end
 
+  describe "#persisted?" do
+    it "returns true if an id is assigned and the record is not destroyed" do
+      person = Person.new id: 123
+      expect(person).to be_persisted
+    end
+
+    it "returns false if an id is assigned and the record is destroyed" do
+      person = Person.create!
+      person.destroy
+      expect(person).to_not be_persisted
+    end
+
+    it "returns false if an id is not assigned" do
+      person = Person.new
+      expect(person).to_not be_persisted
+    end
+  end
+
   describe "#incoming" do
     it "can retrieve heterogenous models" do
       a = Address.create!
