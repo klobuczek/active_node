@@ -22,6 +22,10 @@ Coveralls.wear!
 
 Dir[File.dirname(__FILE__) + '/models/*.rb'].each {|file| require file }
 
+# Requires supporting ruby files with custom matchers and macros, etc,
+# in spec/support/ and its subdirectories.
+Dir[File.dirname(__FILE__) + '/support/**/*.rb'].each { |f| require f }
+
 def generate_text(length=8)
   chars = 'abcdefghjkmnpqrstuvwxyz'
   key = ''
@@ -50,10 +54,10 @@ end
 def error_response(attributes)
   request_uri = double()
   request_uri.stub(:request_uri).and_return("")
-  
+
   http_header = double()
   http_header.stub(:request_uri).and_return(request_uri)
-  
+
   stub(
     http_header: http_header,
     code: attributes[:code],
