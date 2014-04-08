@@ -109,6 +109,10 @@ module ActiveNode
       @destroyed = destroyable
     end
 
+    def destroyed?
+      @destroyed
+    end
+
     def destroy!
       destroy true
     end

@@ -59,6 +59,20 @@ describe ActiveNode::Persistence do
     end
   end
 
+  describe "#destroyed?" do
+    it "returns false if a record has not been destroyed" do
+      person = Person.create!
+      expect(person).to_not be_destroyed
+    end
+
+    it "returns true after a record has been destroyed" do
+      person = Person.create!
+      person.destroy
+
+      expect(person).to be_destroyed
+    end
+  end
+
   describe "#create!" do
     it "should persist attributes" do
       Person.create!(name: 'abc').name.should == 'abc'
