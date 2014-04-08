@@ -85,11 +85,11 @@ module ActiveNode
     end
 
     def to_param
-      id
+      id.to_s if persisted?
     end
 
     def persisted?
-      id
+      id.present? && !destroyed?
     end
 
     def initialize hash={}, split_by=:respond_to_writer?
@@ -111,6 +111,10 @@ module ActiveNode
       destroyable = destroy_associations include_relationships
       Neo.db.delete_node(id) if destroyable
       @destroyed = destroyable
+    end
+
+    def destroyed?
+      @destroyed
     end
 
     def destroy!

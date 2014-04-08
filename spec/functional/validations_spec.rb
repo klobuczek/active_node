@@ -11,9 +11,16 @@ describe ActiveNode::Validations do
       Client.all.first.name.should == 'abc7'
     end
 
-    it "should validate uniqueness" do
-      Person.create! name: 'abc'
-      Person.new(name: 'abc').should_not be_valid
+    describe "with uniqueness constraint" do
+      it "should validate uniqueness" do
+        Person.create! name: 'abc'
+        Person.new(name: 'abc').should_not be_valid
+      end
+
+      it "should still be valid after save" do
+        person = Person.create! name: "abc"
+        person.should be_valid
+      end
     end
 
     it "should validate presence on has_one" do
