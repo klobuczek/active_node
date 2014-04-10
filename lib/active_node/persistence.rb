@@ -222,8 +222,7 @@ module ActiveNode
     end
 
     def all_attributes
-      attributes.merge(@hash)
+      attributes.except('id').merge(@hash)
     end
-
   end
 end
