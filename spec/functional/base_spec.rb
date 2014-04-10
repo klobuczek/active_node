@@ -16,5 +16,5 @@ describe ActiveNode::Base do
     end
   end
 
-  it_behaves_like "ActiveModel"
+  # it_behaves_like "ActiveModel"
 end
