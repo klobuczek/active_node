@@ -1,34 +1,31 @@
-active_node
-===========
+ActiveNode
+==========
 
-ActiveRecord style Object Graph Mapping for neo4j
+- [![Gem Version](https://badge.fury.io/rb/active_node.png)](https://rubygems.org/gems/active_node)
+- [![Build Status](https://travis-ci.org/klobuczek/active_node.png?branch=master)](https://travis-ci.org/klobuczek/active_node)
+- [![Code Climate](https://codeclimate.com/github/klobuczek/active_node.png)](https://codeclimate.com/github/klobuczek/active_node)
+- [![Coverage Status](https://coveralls.io/repos/klobuczek/active_node/badge.png?branch=master)](https://coveralls.io/r/klobuczek/active_node?branch=master)
 
 
-gem install active_node
+ActiveNode is object graph mapping layer for neo4j. It is implemented on top of [neography](http://github.com/maxdemarzi/neography) by Max De Marzi.
+
+
+## Installation
+
+### Gemfile
+
+Add `active_node` to your Gemfile:
+
+```ruby
+gem 'active_node'
+```
+
+In case of default neo4j installation no further configuration is required. Otherwise refer to https://github.com/maxdemarzi/neography for further configuration options.
+
+## Usage
 
 
 ```ruby
-require 'rubygems'
-require 'active_node'
-require 'neography'
-
-Neography.configure do |config|
-  config.protocol           = "http://"
-  config.server             = "localhost"
-  config.port               = 7474
-  config.directory          = ""  # prefix this path with '/'
-  config.cypher_path        = "/cypher"
-  config.gremlin_path       = "/ext/GremlinPlugin/graphdb/execute_script"
-  config.log_file           = "neography.log"
-  config.log_enabled        = false
-  config.slow_log_threshold = 0    # time in ms for query logging
-  config.max_threads        = 20
-  config.authentication     = nil  # 'basic' or 'digest'
-  config.username           = nil
-  config.password           = nil
-  config.parser             = MultiJsonParser
-  end
-
 class NeoUser < ActiveNode::Base
   attribute :name, type: String
   has_many :clients
