@@ -7,7 +7,14 @@ describe ActiveNode::Persistence do
       Address.find(a.id).should == a
     end
 
-    it "should save not conventionally named object" do
+    it "should not set id property" do
+      a = Address.create!
+      ActiveNode::Neo.db.get_node_properties(a.id).should be_nil
+      a.save
+      ActiveNode::Neo.db.get_node_properties(a.id).should be_nil
+    end
+
+    it "should save unconventionally named object" do
       NeoUser.new(name: 'Heinrich').save.should be_true
       NeoUser.all.map(&:name).should == ['Heinrich']
     end
