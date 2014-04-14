@@ -16,9 +16,8 @@ module ActiveNode
         attribute :updated_at, type: String
       end
 
-      def find ids, *includes
-        # array = new_instances(Neo.db.get_nodes([ids].flatten))
-        array = ActiveNode::Graph::Builder.new(self, *includes).build(*ids)
+      def find ids, options={}
+        array = ActiveNode::Graph::Builder.new(self, *options[:include]).build(*ids)
         ids.is_a?(Array) ? array : array.first
       end
 

@@ -6,7 +6,7 @@ module ActiveNode
       attr_reader :reflections, :matches, :klass
 
       def initialize klass, *includes
-        @klass = klass
+        @klass = klass if klass < ActiveNode::Base
         @matches = []
         @reflections =[]
         @object_cache = {}
@@ -27,7 +27,7 @@ module ActiveNode
       end
 
       def execute(ids)
-        q="start n0=node({ids}) #{query} where n0#{label @klass} return #{list_with_rel(@reflections.size)} order by #{created_at_list(@reflections.size)}"
+        q="start n0=node({ids}) #{query}#{"where n0#{label @klass}" if @klass} return #{list_with_rel(@reflections.size)} order by #{created_at_list(@reflections.size)}"
         Neo.db.execute_query(q, ids: ids)
       end
 
@@ -53,7 +53,7 @@ module ActiveNode
       end
 
       def wrap(record, klass)
-        @object_cache[extract_id record] ||= klass.wrap(record, klass)
+        @object_cache[extract_id record] ||= ActiveNode::Base.wrap(record, klass)
       end
 
       def owner_id relationship, direction

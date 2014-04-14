@@ -89,9 +89,22 @@ describe ActiveNode::Persistence do
       person = Person.create!(multi: [1, 2, 3])
       Person.find(person.id).multi.should == [1, 2, 3]
     end
+  end
 
-    it 'should find an object with id of a different model' do
-      Client.find(Person.create!.id).class.should == Person
+  describe "#find" do
+    it 'should find an object by id' do
+      person = Person.create!
+      Person.find(person.id).should == person
+    end
+
+    it 'should find objects passing multiple ids' do
+      person1 = Person.create!
+      person2 = Person.create!
+      Person.find([person1.id, person2.id]).should == [person1, person2]
+    end
+
+    it 'should find an object with id of an unknown model' do
+      ActiveNode::Base.find(Person.create!.id).class.should == Person
     end
   end
 
