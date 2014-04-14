@@ -26,4 +26,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency "net-http-spy", "0.2.1"
   s.add_development_dependency "rake", ">= 0.8.7"
   s.add_development_dependency "coveralls"
+  s.add_development_dependency "codeclimate-test-reporter"
 end
