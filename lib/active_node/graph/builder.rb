@@ -16,7 +16,7 @@ module ActiveNode
       end
 
       def build *objects
-        ids = objects.map { |o| o.is_a?(ActiveNode::Base) ? o.id.tap { |id| @object_cache[id]=o } : o }
+        ids = objects.map { |o| o.is_a?(ActiveNode::Base) ? o.id.tap { |id| @object_cache[id]=o } : extract_id(o) }
         parse_results execute(ids.compact)
         @object_cache.slice(*ids).values
       end
@@ -27,7 +27,7 @@ module ActiveNode
       end
 
       def execute(ids)
-        q="start n0=node({ids}) #{query}#{"where n0#{label @klass}" if @klass} return #{list_with_rel(@reflections.size)} order by #{created_at_list(@reflections.size)}"
+        q="start n0=node({ids}) #{query} #{"where n0#{label @klass}" if @klass} return #{list_with_rel(@reflections.size)} order by #{created_at_list(@reflections.size)}"
         Neo.db.execute_query(q, ids: ids)
       end
 
