@@ -132,10 +132,6 @@ module ActiveNode
       end
 
       private
-      def derive_class_name
-        (direction == :outgoing ? type : name).to_s.camelize
-      end
-
       def derive_type
         direction == :outgoing ? name.to_s.singularize : @model.name.underscore
       end
@@ -144,22 +140,23 @@ module ActiveNode
 
     # Holds all the meta-data about an association as it was specified in the
     # Active Record class.
-    class AssociationReflection < MacroReflection #:nodoc:
-                                                  # Returns the target association's class.
-                                                  #
-                                                  #   class Author < ActiveRecord::Base
-                                                  #     has_many :books
-                                                  #   end
-                                                  #
-                                                  #   Author.reflect_on_association(:books).klass
-                                                  #   # => Book
-                                                  #
-                                                  # <b>Note:</b> Do not call +klass.new+ or +klass.create+ to instantiate
-                                                  # a new association object. Use +build_association+ or +create_association+
-                                                  # instead. This allows plugins to hook into association object creation.
-                                                  #def klass
-                                                  #  @klass ||= model.send(:compute_type, class_name)
-                                                  #end
+    class AssociationReflection < MacroReflection
+      #:nodoc:
+      # Returns the target association's class.
+      #
+      #   class Author < ActiveRecord::Base
+      #     has_many :books
+      #   end
+      #
+      #   Author.reflect_on_association(:books).klass
+      #   # => Book
+      #
+      # <b>Note:</b> Do not call +klass.new+ or +klass.create+ to instantiate
+      # a new association object. Use +build_association+ or +create_association+
+      # instead. This allows plugins to hook into association object creation.
+      #def klass
+      #  @klass ||= model.send(:compute_type, class_name)
+      #end
 
       def initialize(*args)
         super
@@ -225,9 +222,13 @@ module ActiveNode
 
       private
       def derive_class_name
-        class_name = name.to_s.camelize
-        class_name = class_name.singularize if collection?
-        class_name
+        if direction == :outgoing
+          class_name = type.to_s
+        else
+          class_name = name.to_s
+          class_name = class_name.singularize if collection?
+        end
+        model.name.sub(/[^:]*$/, class_name.camelize)
       end
     end
 

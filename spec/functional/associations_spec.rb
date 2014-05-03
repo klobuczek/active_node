@@ -19,7 +19,7 @@ describe ActiveNode::Associations do
     it "can set association by id" do
       user = NeoUser.create!(name: 'Heinrich')
       client = Client.create!(name: 'a', user_ids: [user.id])
-      client.users.should == [user]
+      client.users.to_a.should == [user]
       client.user_ids.should == [user.id]
       client.users.first.clients.first.should == client
       client.user_ids = []

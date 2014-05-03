@@ -1,4 +1,5 @@
 require 'active_support/core_ext/hash/indifferent_access'
+require 'neography'
 
 module ActiveNode
   module Persistence
@@ -11,22 +12,20 @@ module ActiveNode
     end
 
     module ClassMethods
+      delegate :all, :first, :where, :limit, :includes, :delete_all, to: :builder
+
       def timestamps
         attribute :created_at, type: String
         attribute :updated_at, type: String
       end
 
       def find ids, options={}
-        array = ActiveNode::Graph::Builder.new(self, *options[:include]).build(*ids)
+        array = includes(*options[:include]).build(*ids)
         ids.is_a?(Array) ? array : array.first
       end
 
       def find_by_cypher query, params={}, klass=nil
         wrap(Neo.db.execute_query(query, params)['data'].map(&:first), klass)
-      end
-
-      def all
-        new_instances(Neo.db.get_nodes_labeled(label), self)
       end
 
       def label
@@ -48,6 +47,10 @@ module ActiveNode
       def active_node_class(class_name, default_klass=nil)
         klass = Module.const_get(class_name) rescue nil
         klass && klass < ActiveNode::Base && klass || default_klass
+      end
+
+      def builder
+        ActiveNode::Graph::Builder.new(self)
       end
 
       private
@@ -74,7 +77,7 @@ module ActiveNode
 
     def []=(attr, value)
       if declared? attr
-        send "#{attr}=", value
+        write_attr attr, value
       else
         @hash[attr]=value
       end
@@ -103,6 +106,7 @@ module ActiveNode
 
     def save(*)
       create_or_update
+      super
     end
 
     alias save! save
@@ -129,8 +133,13 @@ module ActiveNode
       related(:outgoing, type, klass)
     end
 
-    def relationships(reflection, *associations)
-      ActiveNode::Graph::Builder.new(self.class, reflection.name => associations).build(self)
+    def includes!(includes)
+      self.class.includes(includes).build(self).first
+    end
+
+    def update_attributes attributes
+      attributes.each { |key, value| respond_to_writer?(attr) ? write_attr(key, value) : self[key]=value }
+      save
     end
 
     private
@@ -143,7 +152,15 @@ module ActiveNode
     end
 
     def respond_to_writer? attr
-      respond_to? "#{attr}="
+      respond_to? writer(attr)
+    end
+
+    def write_attr attr, value
+      send writer(attr), value
+    end
+
+    def writer attr
+      "#{attr}="
     end
 
     def related(direction, type, klass)

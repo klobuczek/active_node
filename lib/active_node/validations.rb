@@ -31,7 +31,7 @@ module ActiveNode
     extend ActiveSupport::Concern
     include ActiveModel::Validations
 
-    autoload :UniquenessValidator, 'active_node/validations/uniqueness_validator'
+    autoload :UniquenessValidator, 'active_node/validations/uniqueness'
 
     module ClassMethods
       # Creates an object just like Base.create but calls <tt>save!</tt> instead of +save+
@@ -82,3 +82,5 @@ module ActiveNode
     end
   end
 end
+
+require "active_node/validations/uniqueness"

@@ -8,6 +8,7 @@ module ActiveNode
   autoload :Persistence
   autoload :Validations
   autoload :Reflection
+  autoload :Dirty
   autoload :VERSION
   autoload :Neo
   autoload :Relationship

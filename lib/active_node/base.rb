@@ -3,7 +3,11 @@ require 'active_node/errors'
 
 module ActiveNode
   class Base
-    include ActiveAttr::Model
+    include ActiveAttr::BasicModel
+    include ActiveAttr::Attributes
+    include ActiveAttr::MassAssignment
+    include ActiveAttr::TypecastedAttributes
+    include Dirty
     include Persistence
     include Validations
     include Callbacks
@@ -15,4 +19,6 @@ module ActiveNode
       Class.new(super_class=self) { define_singleton_method(:label) { klass_name } }
     end
   end
+
+  ActiveSupport.run_load_hooks(:active_node, Base)
 end

@@ -100,7 +100,7 @@ describe ActiveNode::Persistence do
     it 'should find objects passing multiple ids' do
       person1 = Person.create!
       person2 = Person.create!
-      Person.find([person1.id, person2.id]).should == [person1, person2]
+      Person.find([person1.id, person2.id]).to_a.should == [person1, person2]
     end
 
     it 'should find an object with id of an unknown model' do

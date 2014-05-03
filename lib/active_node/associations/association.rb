@@ -40,9 +40,8 @@ module ActiveNode
         reflection.klass
       end
 
-
       def rel(*associations)
-        owner.relationships(reflection, *associations)
+        owner.includes!(reflection.name => associations)
       end
 
       # Implements the writer method, e.g. foo.items= for Foo.has_many :items
@@ -85,7 +84,7 @@ module ActiveNode
       def save(fresh=false)
         #return unless @dirty
         #delete all relations missing in new target
-        original_rels = fresh ? [] : ActiveNode::Graph::Builder.new(owner.class, reflection.name).build(owner.id).first.association(reflection.name).rels_reader
+        original_rels = fresh ? [] : owner.class.includes(reflection.name).build(owner.id).first.association(reflection.name).rels_reader
         original_rels.each do |r|
           unless ids_reader.include? r.other.id
             Neo.db.delete_relationship(r.id)

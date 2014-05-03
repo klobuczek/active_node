@@ -12,28 +12,83 @@ module ActiveNode
         @object_cache = {}
         @relationship_cache = {}
         @loaded_assoc_cache = {}
-        parse_paths(:n0, klass, includes)
+        @where = {}
+        @includes = includes
+      end
+
+      def includes *includes
+        @includes += includes
+        self
+      end
+
+      def where hash
+        @where.merge! hash
+        self
+      end
+
+      def limit count
+        @limit = count
+        self
       end
 
       def build *objects
-        ids = objects.map { |o| o.is_a?(ActiveNode::Base) ? o.id.tap { |id| @object_cache[id]=o } : extract_id(o) }
-        parse_results execute(ids.compact)
-        @object_cache.slice(*ids).values
+        ids = objects.map { |o| o.is_a?(ActiveNode::Base) ? o.id.tap { |id| @object_cache[id]=o } : extract_id(o) }.compact
+        return [] if ids.empty?
+        @where = {id: ids}.merge! @where
+        load
+      end
+
+      def load
+        parse_results execute
+      end
+
+      def first
+        limit 1
+        load.first
+      end
+
+      alias :all :load
+
+      def delete_all
+        Neo.db.execute_query("#{initial_match} OPTIONAL MATCH (n0)-[r]-() DELETE n0,r")
       end
 
       private
       def query
-        @matches.join " "
+        parse_paths(:n0, @klass, @includes)
+        @matches.join ' '
       end
 
-      def execute(ids)
-        q="start n0=node({ids}) #{query} #{"where n0#{label @klass}" if @klass} return #{list_with_rel(@reflections.size)} order by #{created_at_list(@reflections.size)}"
-        Neo.db.execute_query(q, ids: ids)
+      def conditions
+        cond = @where.map { |key, value| "#{cond_left(key)} #{cond_operator(value)} {#{key}}" }
+        "where #{cond.join ' and '}" unless cond.empty?
+      end
+
+      def cond_left key
+        key.to_s == 'id' ? "id(n0)" : "n0.#{key}"
+      end
+
+      def cond_operator value
+        value.is_a?(Array) ? 'in' : '='
+      end
+
+      def limit_cond
+        "limit #{@limit}" if @limit
+      end
+
+      def initial_match
+        "match (n0#{label @klass})"
+      end
+
+      def execute
+        q=[initial_match, conditions, query, 'return', list_with_rel(@reflections.size), 'order by', created_at_list(@reflections.size), limit_cond].compact.join ' '
+        Neo.db.execute_query(q, @where)
       end
 
       def parse_results results
+        @results = Set.new
         results['data'].each do |record|
-          wrap(record.first, @klass)
+          @results << wrap(record.first, @klass)
           @reflections.each_with_index do |reflection, index|
             node_rel = record[2*index+1]
             node_rel = node_rel.last if node_rel.is_a? Array
@@ -45,6 +100,7 @@ module ActiveNode
             assoc.rels_writer((assoc.rel_target || []) << rel) unless previously_loaded?(assoc)
           end
         end
+        @results.to_a
       end
 
       def previously_loaded?(assoc)
@@ -92,7 +148,7 @@ module ActiveNode
       end
 
       def label klass
-        ":#{klass.label}" if klass
+        ":`#{klass.label}`" if klass
       end
 
       def multiplicity multiplicity
