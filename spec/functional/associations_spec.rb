@@ -80,7 +80,7 @@ describe ActiveNode::Associations do
       person.people = [person]
       person.save
       person.people.first == person
-      Person.all.count.should == 1
+      Person.count.should == 1
     end
 
     it 'can handle reference to the same class' do

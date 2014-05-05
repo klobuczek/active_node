@@ -14,6 +14,11 @@ module ActiveNode
   autoload :Relationship
   autoload :Graph
 
+  autoload_under 'graph' do
+    autoload :QueryMethods
+    autoload :FinderMethods
+  end
+
   eager_autoload do
     autoload :ActiveNodeError, 'active_node/errors'
     autoload :Associations

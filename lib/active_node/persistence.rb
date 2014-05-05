@@ -12,16 +12,11 @@ module ActiveNode
     end
 
     module ClassMethods
-      delegate :all, :first, :where, :limit, :includes, :delete_all, to: :builder
+      delegate :all, :first, :where, :limit, :includes, :delete_all, :build, :find, :offset, :count, to: :graph
 
       def timestamps
         attribute :created_at, type: String
         attribute :updated_at, type: String
-      end
-
-      def find ids, options={}
-        array = includes(*options[:include]).build(*ids)
-        ids.is_a?(Array) ? array : array.first
       end
 
       def find_by_cypher query, params={}, klass=nil
@@ -49,8 +44,8 @@ module ActiveNode
         klass && klass < ActiveNode::Base && klass || default_klass
       end
 
-      def builder
-        ActiveNode::Graph::Builder.new(self)
+      def graph
+        ActiveNode::Graph.new(self)
       end
 
       private
@@ -134,7 +129,7 @@ module ActiveNode
     end
 
     def includes!(includes)
-      self.class.includes(includes).build(self).first
+      new_record? ? self : self.class.includes(includes).build(self).first
     end
 
     def update_attributes attributes
