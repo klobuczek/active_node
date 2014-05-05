@@ -12,7 +12,7 @@ module ActiveNode
     end
 
     module ClassMethods
-      delegate :all, :first, :where, :limit, :includes, :delete_all, :build, :find, :offset, :count, to: :graph
+      delegate :all, :first, :where, :limit, :includes, :delete_all, :build, :find, :offset, :count, :order, to: :graph
 
       def timestamps
         attribute :created_at, type: String
@@ -84,6 +84,10 @@ module ActiveNode
 
     def to_param
       id.to_s if persisted?
+    end
+
+    def to_key
+      id
     end
 
     def persisted?

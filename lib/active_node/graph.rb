@@ -34,7 +34,7 @@ module ActiveNode
     end
 
     def where hash
-      @where.merge! hash
+      @where.merge! hash if hash
       self
     end
 
@@ -108,7 +108,11 @@ module ActiveNode
     end
 
     def execute
-      Neo.db.execute_query(to_cypher, @where)
+      Neo.db.execute_query(to_cypher, sanitize_where)
+    end
+
+    def sanitize_where
+      @where.each { |key, value| @where[key] = extract_id(value) if key.to_s == 'id'}
     end
 
     def to_cypher
@@ -199,7 +203,14 @@ module ActiveNode
     end
 
     def extract_id(id)
-      get_id(id).to_i
+      case id
+        when Array
+          id.map { |i| extract_id(i) }
+        when ActiveNode::Base
+          id.id
+        else
+          get_id(id).to_i
+      end
     end
   end
 end
