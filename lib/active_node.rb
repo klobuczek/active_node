@@ -17,6 +17,7 @@ module ActiveNode
   autoload_under 'graph' do
     autoload :QueryMethods
     autoload :FinderMethods
+    autoload :Delegation
   end
 
   eager_autoload do

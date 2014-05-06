@@ -32,4 +32,16 @@ describe ActiveNode::Graph do
       person.children
     end
   end
+
+  describe '#empty?' do
+    it 'should return true' do
+      Person.all.should be_empty
+    end
+  end
+
+  describe '#detect' do
+    it 'should return nil' do
+      Person.all.detect{|p| true}.should be_nil
+    end
+  end
 end

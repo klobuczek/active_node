@@ -222,13 +222,9 @@ module ActiveNode
 
       private
       def derive_class_name
-        if direction == :outgoing
-          class_name = type.to_s
-        else
-          class_name = name.to_s
-          class_name = class_name.singularize if collection?
-        end
-        model.name.sub(/[^:]*$/, class_name.camelize)
+        class_name = name.to_s.camelize
+        class_name = class_name.singularize if collection?
+        model.name.sub(/[^:]*$/, class_name)
       end
     end
 

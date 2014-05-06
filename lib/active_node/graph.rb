@@ -1,12 +1,10 @@
 module ActiveNode
   class Graph
     include Neography::Rest::Helpers
-    include FinderMethods, QueryMethods
+    include FinderMethods, QueryMethods, Delegation
 
     attr_reader :reflections, :matches, :klass, :loaded
     alias :loaded? :loaded
-
-    delegate :to_xml, :to_yaml, :length, :collect, :map, :each, :all?, :include?, :to_ary, to: :to_a
 
     def initialize klass, *includes
       @klass = klass if klass < ActiveNode::Base
@@ -55,6 +53,46 @@ module ActiveNode
     def to_a
       load
       @records
+    end
+
+    def as_json(options = nil) #:nodoc:
+      to_a.as_json(options)
+    end
+
+    # Returns size of the records.
+    def size
+      loaded? ? @records.length : count
+    end
+
+    # Returns true if there are no records.
+    def empty?
+      return @records.empty? if loaded?
+
+      if limit_value == 0
+        true
+      else
+        # FIXME: This count is not compatible with #select('authors.*') or other select narrows
+        c = count
+        c.respond_to?(:zero?) ? c.zero? : c.empty?
+      end
+    end
+
+    # Returns true if there are any records.
+    def any?
+      if block_given?
+        to_a.any? { |*block_args| yield(*block_args) }
+      else
+        !empty?
+      end
+    end
+
+    # Returns true if there is more than one record.
+    def many?
+      if block_given?
+        to_a.many? { |*block_args| yield(*block_args) }
+      else
+        limit_value ? to_a.many? : size > 1
+      end
     end
 
     # Compares two relations for equality.

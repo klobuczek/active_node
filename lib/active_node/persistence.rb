@@ -177,7 +177,7 @@ module ActiveNode
 
     def create_or_update
       fresh = new_record?
-      write; true
+      write
       association_cache.values.each { |assoc| assoc.save(fresh) }
     end
 
