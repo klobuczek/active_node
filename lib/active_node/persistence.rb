@@ -15,8 +15,8 @@ module ActiveNode
       delegate :all, :first, :where, :limit, :includes, :delete_all, :build, :find, :offset, :count, :order, to: :graph
 
       def timestamps
-        attribute :created_at, type: String
-        attribute :updated_at, type: String
+        attribute :created_at, type: Time
+        attribute :updated_at, type: Time
       end
 
       def find_by_cypher query, params={}, klass=nil
@@ -86,10 +86,6 @@ module ActiveNode
       id.to_s if persisted?
     end
 
-    def to_key
-      id
-    end
-
     def persisted?
       id.present? && !destroyed?
     end
@@ -137,11 +133,15 @@ module ActiveNode
     end
 
     def update_attributes attributes
-      attributes.each { |key, value| respond_to_writer?(attr) ? write_attr(key, value) : self[key]=value }
+      attributes.each { |key, value| respond_to_non_id_writer?(key) ? write_attr(key, value) : self[key]=value }
       save
     end
 
     private
+    def respond_to_non_id_writer? attr
+      respond_to_writer?(attr) && attr.to_s != 'id'
+    end
+
     def split_hash hash, method, split_by
       hash.try(method) { |k, _| send split_by, k }
     end
@@ -182,7 +182,7 @@ module ActiveNode
     end
 
     def write
-      now = Time.now.utc.iso8601(3)
+      now = Time.now
       try :updated_at=, now
       if persisted?
         write_properties
@@ -202,7 +202,22 @@ module ActiveNode
     end
 
     def all_attributes
-      attributes.except('id').merge(@hash)
+      to_neo! attributes.except('id').merge(@hash)
+    end
+
+    def to_neo! attrs
+      attrs.each { |k, v| attrs[k] = to_neo v }
+    end
+
+    def to_neo value
+      case value
+        when Time, DateTime
+          value.utc.iso8601(6)
+        when Date
+          value.to_s
+        else
+          value
+      end
     end
   end
 end

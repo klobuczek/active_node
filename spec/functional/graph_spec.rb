@@ -41,7 +41,14 @@ describe ActiveNode::Graph do
 
   describe '#detect' do
     it 'should return nil' do
-      Person.all.detect{|p| true}.should be_nil
+      Person.all.detect { |p| true }.should be_nil
+    end
+  end
+
+  describe '#includes' do
+    it 'should not throw an error' do
+      p = Person.create! father: Person.create!
+      Person.where(id: p.id).includes(:father).first.should == p
     end
   end
 end

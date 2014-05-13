@@ -7,6 +7,7 @@ module ActiveNode
     include ActiveAttr::Attributes
     include ActiveAttr::MassAssignment
     include ActiveAttr::TypecastedAttributes
+    include Typecasting
     include Dirty
     include Persistence
     include Validations

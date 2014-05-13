@@ -13,6 +13,7 @@ module ActiveNode
   autoload :Neo
   autoload :Relationship
   autoload :Graph
+  autoload :Typecasting
 
   autoload_under 'graph' do
     autoload :QueryMethods
