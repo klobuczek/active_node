@@ -182,7 +182,7 @@ module ActiveNode
     end
 
     def write
-      now = Time.now
+      now = to_neo(Time.now)
       try :updated_at=, now
       if persisted?
         write_properties
@@ -212,7 +212,7 @@ module ActiveNode
     def to_neo value
       case value
         when Time, DateTime
-          value.utc.iso8601(6)
+          value.utc.iso8601(3)
         when Date
           value.to_s
         else
