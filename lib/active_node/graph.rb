@@ -1,5 +1,14 @@
 module ActiveNode
   class Graph
+    MULTI_VALUE_METHODS  = [:includes, :eager_load, :preload, :select, :group,
+                            :order, :joins, :where, :having, :bind, :references,
+                            :extending, :unscope]
+
+    SINGLE_VALUE_METHODS = [:limit, :offset, :lock, :readonly, :from, :reordering,
+                            :reverse_order, :distinct, :create_with, :uniq]
+
+    VALUE_METHODS = MULTI_VALUE_METHODS + SINGLE_VALUE_METHODS
+
     include Neography::Rest::Helpers
     include FinderMethods, QueryMethods, Delegation
 
@@ -15,6 +24,7 @@ module ActiveNode
       @loaded_assoc_cache = {}
       @where = {}
       @includes = includes
+      @values = {}
       @offsets = {}
     end
 
@@ -33,11 +43,6 @@ module ActiveNode
 
     def where hash
       @where.merge! hash if hash
-      self
-    end
-
-    def limit count
-      @limit = count
       self
     end
 
@@ -138,7 +143,11 @@ module ActiveNode
     end
 
     def limit_cond
-      "limit #{@limit}" if @limit
+      "limit #{limit_value}" if limit_value
+    end
+
+    def skip_cond
+      "skip #{offset_value}" if offset_value
     end
 
     def initial_match
@@ -154,7 +163,7 @@ module ActiveNode
     end
 
     def to_cypher
-      [initial_match, conditions, "with n0", limit_cond, query, 'return', list_with_rel(@reflections.size), 'order by', created_at_list(@reflections.size)].compact.join ' '
+      [initial_match, conditions, "with n0", order_list, skip_cond, limit_cond, query, 'return', list_with_rel(@reflections.size), order_list_with_defaults].compact.join ' '
     end
 
     def parse_results results
@@ -229,15 +238,23 @@ module ActiveNode
     end
 
     def list_with_rel num
-      comma_sep_list(num) { |i| [("r#{i}" if i>0), "n#{i}"] }
+      comma_sep_list(0, num) { |i| [("r#{i}" if i>0), "n#{i}"] }
     end
 
-    def comma_sep_list num, &block
+    def comma_sep_list start, num, &block
       (0..num).map(&block).flatten.compact.join(', ')
     end
 
-    def created_at_list num
-      comma_sep_list(num) { |i| "n#{i}.created_at" }
+    def order_list_with_defaults
+      "#{order_list}, #{comma_sep_list(1, @reflections.size) { |i| "n#{i}.created_at" }}"
+    end
+
+    def order_list
+      if order_values.empty?
+        order(:created_at) if @klass.respond_to? :created_at
+        order(:id)
+      end
+      "order by #{build_order(:n0)}"
     end
 
     def extract_id(id)
@@ -250,5 +267,7 @@ module ActiveNode
           get_id(id).to_i
       end
     end
+
+
   end
 end
