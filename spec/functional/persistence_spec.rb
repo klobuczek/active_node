@@ -152,4 +152,14 @@ describe ActiveNode::Persistence do
       a.incoming(:address).should include(p, c)
     end
   end
+
+  describe "#update_attribute" do
+    it "should update atribute without validation" do
+      client = Client.create!(name: 'abc')
+      client.update_attribute(:name, nil)
+      Client.find(client.id).name.should be_nil
+    end
+  end
+
+  describe "#upd"
 end

@@ -46,9 +46,16 @@ module ActiveNode
 
       # Implements the writer method, e.g. foo.items= for Foo.has_many :items
       def writer(records)
+        validate_type(records)
         @dirty = true
         @rel_target = nil
         @target = records
+      end
+
+      def validate_type(records)
+        unless records.all? {|r| r.is_a?(reflection.klass)}
+          raise ArgumentError, "#{reflection.name} can only accept object(s) of class #{reflection.klass}"
+        end
       end
 
       alias :super_writer :writer

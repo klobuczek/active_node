@@ -133,11 +133,20 @@ module ActiveNode
     end
 
     def update_attributes attributes
-      attributes.each { |key, value| respond_to_non_id_writer?(key) ? write_attr(key, value) : self[key]=value }
+      attributes.each { |key, value| modify_attribute(key, value) }
       save
     end
 
+    def update_attribute(key, value)
+      modify_attribute(key, value)
+      save!(validate: false)
+    end
+
     private
+    def modify_attribute(key, value)
+      respond_to_non_id_writer?(key) ? write_attr(key, value) : self[key]=value
+    end
+
     def respond_to_non_id_writer? attr
       respond_to_writer?(attr) && attr.to_s != 'id'
     end

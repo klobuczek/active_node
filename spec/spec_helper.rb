@@ -3,14 +3,6 @@ CodeClimate::TestReporter.start
 #require 'rubygems'
 #require 'bundler/setup'
 require 'active_node'
-#
-#require "active_node/version"
-#require "active_model/version"
-#require 'active_support'
-#require 'active_model/validator'
-#require 'active_model/validations'
-#require 'active_model'
-#require 'active_attr'
 require 'neography'
 require 'benchmark'
 #require 'matchers'
@@ -37,14 +29,9 @@ end
 
 RSpec.configure do |c|
   c.filter_run_excluding :slow => true, :gremlin => true
-  #c.around(:each) do
-  #  Neography::Rest.new.execute_query("START n0=node(0),nx=node(*) MATCH n0-[r0?]-(),nx-[rx?]-() WHERE nx <> n0 DELETE r0,rx,nx")
-  #end
   c.before(:each) do
     @neo=Neography::Rest.new
     @neo.execute_query("MATCH (n) OPTIONAL MATCH (n)-[r]-() DELETE n,r")
-    #@neo.set_node_auto_index_status(true)
-    #@neo.add_node_auto_index_property('type')
   end
 end
 
