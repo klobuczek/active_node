@@ -1,7 +1,7 @@
-script: "bundle exec rake neo4j:install['enterprise','2.0.3'] neo4j:start spec --trace"
+script: "bundle exec rake neo4j:install['enterprise','2.1.3'] neo4j:start spec --trace"
 language: ruby
 rvm:
-  - 2.1.1
+  - 2.1.2
 addons:
   code_climate:
     repo_token: 88fa9b8eb0bfc48e8c5077253d829e94af9f76aca60df9e75ae0e50a4c7cd9f0
