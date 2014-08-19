@@ -180,8 +180,9 @@ module ActiveNode
     end
 
     def destroy_associations include_associations
-      rels=Neo.db.get_node_relationships(id)
-      rels.nil? || rels.empty? || include_associations && rels.each { |rel| Neo.db.delete_relationship(rel) }
+      rels = Neo.db.get_node_relationships(id)
+      rels.each { |rel| Neo.db.delete_relationship(rel) } if include_associations
+      rels.empty? || include_associations
     end
 
     def create_or_update

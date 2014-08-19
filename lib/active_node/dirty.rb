@@ -21,6 +21,7 @@ module ActiveNode
     def save(*)
       @previously_changed = changes
       @changed_attributes.clear
+      true
     end
   end
 end
