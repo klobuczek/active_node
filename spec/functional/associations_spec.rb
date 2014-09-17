@@ -178,5 +178,15 @@ describe ActiveNode::Associations do
       person = Person.create! children: [Person.create!(address: address)]
       Person.find(person.id).children(:address).first.address.should == address
     end
+
+    it 'should handle simultaneous updates to father and children' do
+      pending
+      child1 = Person.create!
+      father = Person.create! children: [child1]
+      father = Person.includes(:children).find(father.id)
+      father.children.first.update_attributes(father: nil)
+      father.update_attributes(name: "John")
+      Person.find(father.id).children.should be_empty?
+    end
   end
 end

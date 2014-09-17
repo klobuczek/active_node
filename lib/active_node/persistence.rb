@@ -50,7 +50,7 @@ module ActiveNode
 
       private
       def new_instance node, klass=nil
-        (klass || find_suitable_class(Neo.db.get_node_labels(node))).try(:new, data(node), :declared?)
+        node && (klass || find_suitable_class(Neo.db.get_node_labels(node))).try(:new, data(node), :declared?)
       end
 
       def data hash

@@ -161,5 +161,9 @@ describe ActiveNode::Persistence do
     end
   end
 
-  describe "#upd"
+  describe "#wrap" do
+    it "should wrap nil as nil" do
+      Client.wrap(nil).should be_nil
+    end
+  end
 end
