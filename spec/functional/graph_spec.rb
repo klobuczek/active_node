@@ -51,4 +51,13 @@ describe ActiveNode::Graph do
       Person.where(id: p.id).includes(:father).first.should == p
     end
   end
+
+  it "includes should return correct associated objects" do
+    child3 = Person.create!
+    child2 = Person.create!
+    child1 = Person.create! child_ids: [child2.id, child3.id]
+    person = Person.create! child_ids: [child1.id]
+    person = Person.includes(children: :children).find(person.id)
+    person.children.should == [child1]
+  end
 end
