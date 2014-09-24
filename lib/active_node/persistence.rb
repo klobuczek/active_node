@@ -31,14 +31,6 @@ module ActiveNode
         node.is_a?(Array) ? new_instances(node, klass) : new_instance(node, klass)
       end
 
-      def wrap_rel rel, node, klass
-        create_rel rel, wrap(node, klass)
-      end
-
-      def create_rel rel, node
-        ActiveNode::Relationship.new node, rel['data'].merge(id: get_id(rel).to_i)
-      end
-
       def active_node_class(class_name, default_klass=nil)
         klass = Module.const_get(class_name) rescue nil
         klass && klass < ActiveNode::Base && klass || default_klass
@@ -48,13 +40,24 @@ module ActiveNode
         ActiveNode::Graph.new(self)
       end
 
+      def data hash
+        hash['data'].merge(id: extract_id(hash))
+      end
+
+      def extract_id(id)
+        case id
+          when Array
+            id.map { |i| extract_id(i) }
+          when ActiveNode::Base
+            id.id
+          else
+            get_id(id).to_i
+        end
+      end
+
       private
       def new_instance node, klass=nil
         node && (klass || find_suitable_class(Neo.db.get_node_labels(node))).try(:new, data(node), :declared?)
-      end
-
-      def data hash
-        hash['data'].merge(id: get_id(hash).to_i)
       end
 
       def new_instances nodes, klass=nil
@@ -203,7 +206,7 @@ module ActiveNode
     end
 
     def create_node_with_label
-      self.id = get_id(Neo.db.create_node(all_attributes)).to_i
+      self.id = self.class.extract_id(Neo.db.create_node(all_attributes))
       Neo.db.set_label(id, self.class.label)
     end
 
