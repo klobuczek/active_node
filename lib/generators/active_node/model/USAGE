@@ -1,0 +1,55 @@
+Description:
+    Creates a new ActiveNode model, using the given NAME.  Similar to with
+    active_record, pass the model name, either CamelCased or under_scored, and
+    an optional list of attribute pairs as arguments.
+
+    Attribute pairs are attribute:type arguments specifying the model's
+    attributes. The +timestamps+ call is added by default, so you don't have to
+    a) specify them as explicit attributes, nor b) add the +timestamps+ call
+    yourself.  You can, however, turn this off by using the +--no-timestamps+
+    option.
+
+    This generator invokes your configured test framework and will, thus,
+    create tests for your generated model.
+
+
+Available field types:
+
+    Just after the field name you can specify a type like String or boolean.
+    It will generate the property key with the associated Neo4J value type. You
+    can use the following types:
+
+    * big_decimal
+    * boolean
+    * date
+    * date_time
+    * float
+    * integer
+    * object
+    * string
+
+Examples:
+
+    `rails generate active_node:model Car`
+
+        Creates:
+
+            Model: +app/models/car.rb+
+            Test:  +test/models/car_test.rb+
+
+    `rails generate active_node:model Car make engine_displacement`
+
+        This will...
+
+            ...create app/models/car.rb
+            ...add ActiveNode attributes +make+ and +engine_displacement+,
+            without specifying the attribute type.
+
+    `rails generate active_node:model Car make:string engine_displacement:short`
+
+        This will...
+
+            * ...app/models/car.rb
+            * ...add ActiveNode attributes +make+ as type String, and
+              +engine_displacement+ as type short.
+

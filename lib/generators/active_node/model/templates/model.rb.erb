@@ -1,0 +1,10 @@
+<% module_namespacing do -%>
+class <%= class_name %> < ActiveNode::Base
+<% attributes.reject(&:reference?).each do |attribute| -%>
+  attribute :<%= attribute.name %>, type: <%= attribute.type_class %>
+<% end -%>
+<% if options[:timestamps] -%>
+  timestamps
+<% end -%>
+end
+<% end -%>
