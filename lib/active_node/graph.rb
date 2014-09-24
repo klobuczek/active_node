@@ -1,8 +1,8 @@
 module ActiveNode
   class Graph
-    MULTI_VALUE_METHODS  = [:includes, :eager_load, :preload, :select, :group,
-                            :order, :joins, :where, :having, :bind, :references,
-                            :extending, :unscope]
+    MULTI_VALUE_METHODS = [:includes, :eager_load, :preload, :select, :group,
+                           :order, :joins, :where, :having, :bind, :references,
+                           :extending, :unscope]
 
     SINGLE_VALUE_METHODS = [:limit, :offset, :lock, :readonly, :from, :reordering,
                             :reverse_order, :distinct, :create_with, :uniq]
@@ -14,6 +14,8 @@ module ActiveNode
 
     attr_reader :reflections, :matches, :klass, :loaded
     alias :loaded? :loaded
+
+    delegate :data, :extract_id, to: ActiveNode::Base
 
     def initialize klass, *includes
       @klass = klass if klass < ActiveNode::Base
@@ -51,7 +53,7 @@ module ActiveNode
     end
 
     def load
-      parse_results execute unless loaded?
+      parse_results execute['data'] unless loaded?
       self
     end
 
@@ -159,30 +161,27 @@ module ActiveNode
     end
 
     def sanitize_where
-      @where.each { |key, value| @where[key] = extract_id(value) if key.to_s == 'id'}
+      @where.each { |key, value| @where[key] = extract_id(value) if key.to_s == 'id' }
     end
 
     def to_cypher
       [initial_match, conditions, "with n0", order_list, skip_cond, limit_cond, query, 'return', list_with_rel(@reflections.size), order_list_with_defaults].compact.join ' '
     end
 
-    def parse_results results
-      records = Set.new
-      results['data'].each do |record|
-        records << wrap(record.first, @klass)
+    def parse_results data
+      @records = data.reduce(Set.new) { |set, record| set << wrap(record.first, @klass) }.to_a
+      alternate_cells(data, 2) { |node, reflection| wrap node, reflection.klass }
+      alternate_cells(data, 1) { |rel, reflection| wrap_rel [rel].flatten.last, reflection }
+      @loaded = true
+    end
+
+    def alternate_cells data, shift
+      data.each do |row|
         @reflections.each_with_index do |reflection, index|
-          node_rel = record[2*index+1]
-          node_rel = node_rel.last if node_rel.is_a? Array
-          next unless node_rel
-          owner = @object_cache[owner_id node_rel, reflection.direction]
-          node = wrap record[2*index + 2], reflection.klass
-          rel = reflection.klass.create_rel node_rel, node
-          assoc = owner.association(reflection.name)
-          assoc.rels_writer((assoc.rel_target || []) << rel) unless previously_loaded?(assoc)
+          cell = row[2*index + shift]
+          yield cell, reflection if cell
         end
       end
-      @loaded = true
-      @records = records.to_a
     end
 
     def previously_loaded?(assoc)
@@ -194,8 +193,19 @@ module ActiveNode
       @object_cache[extract_id record] ||= ActiveNode::Base.wrap(record, klass)
     end
 
-    def owner_id relationship, direction
-      extract_id relationship[direction == :incoming ? 'end' : 'start']
+    def wrap_rel(rel, reflection)
+      @relationship_cache[extract_id rel] ||= create_rel(rel, reflection)
+    end
+
+    def create_rel(rel, reflection)
+      ActiveNode::Relationship.new(@object_cache[node_id rel, reflection, :other], data(rel)).tap do |relationship|
+        assoc = @object_cache[node_id rel, reflection, :owner].association(reflection.name)
+        assoc.rels_writer((assoc.rel_target || []) << relationship) unless previously_loaded?(assoc)
+      end
+    end
+
+    def node_id relationship, reflection, side
+      extract_id relationship[reflection.direction == {owner: :outgoing, other: :incoming}[side] ? 'start' : 'end']
     end
 
     def parse_paths as, klass, includes
@@ -256,18 +266,5 @@ module ActiveNode
       end
       "order by #{build_order(:n0)}"
     end
-
-    def extract_id(id)
-      case id
-        when Array
-          id.map { |i| extract_id(i) }
-        when ActiveNode::Base
-          id.id
-        else
-          get_id(id).to_i
-      end
-    end
-
-
   end
 end
