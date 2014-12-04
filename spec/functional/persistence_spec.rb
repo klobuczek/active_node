@@ -166,4 +166,8 @@ describe ActiveNode::Persistence do
       Client.wrap(nil).should be_nil
     end
   end
+
+  describe "default" do
+
+  end
 end
