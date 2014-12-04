@@ -3,16 +3,16 @@ require 'spec_helper'
 describe ActiveNode::Base do
   describe ".subclass" do
     it "should be ActiveNode::Base" do
-      ActiveNode::Base.subclass('Abc').should <= ActiveNode::Base
+      expect(ActiveNode::Base.subclass('Abc')).to be <= ActiveNode::Base
     end
 
     it "should have the right label" do
-      ActiveNode::Base.subclass('Abc').label.should == 'Abc'
+      expect(ActiveNode::Base.subclass('Abc').label).to eq('Abc')
     end
 
     it "should find object via subclass" do
       p = Person.create! name: 'Heinrich'
-      ActiveNode::Base.subclass('Person').find(p.id)[:name].should == p.name
+      expect(ActiveNode::Base.subclass('Person').find(p.id)[:name]).to eq(p.name)
     end
   end
 

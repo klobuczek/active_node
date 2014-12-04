@@ -5,9 +5,9 @@ describe ActiveNode::QueryMethods do
     it "should order" do
       p1=Person.create!(name: 'abc')
       p2=Person.create!(name: 'def')
-      Person.order(:name).should == [p1, p2]
-      Person.order(name: :desc).should == [p2, p1]
-      Person.order('name asc').reverse_order.should == [p2, p1]
+      expect(Person.order(:name)).to eq([p1, p2])
+      expect(Person.order(name: :desc)).to eq([p2, p1])
+      expect(Person.order('name asc').reverse_order).to eq([p2, p1])
     end
   end
 
@@ -15,7 +15,7 @@ describe ActiveNode::QueryMethods do
     it "should limt" do
       p1=Person.create!(name: 'abc')
       p2=Person.create!(name: 'def')
-      Person.limit(1).should == [p1]
+      expect(Person.limit(1)).to eq([p1])
     end
   end
 end

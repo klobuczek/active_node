@@ -5,7 +5,7 @@ describe ActiveNode::Associations do
     it "should have empty association" do
       client = Client.new(name: 'a')
       client.save
-      client.users.should be_empty
+      expect(client.users).to be_empty
     end
 
     it "should not have empty association" do
@@ -13,21 +13,21 @@ describe ActiveNode::Associations do
       user.save
       client = Client.new(name: 'a', users: [user])
       client.save
-      client.users.should == [user]
+      expect(client.users).to eq([user])
     end
 
     it "can set association by id" do
       user = NeoUser.create!(name: 'Heinrich')
       client = Client.create!(name: 'a', user_ids: [user.id])
-      client.users.to_a.should == [user]
-      client.user_ids.should == [user.id]
-      client.users.first.clients.first.should == client
+      expect(client.users.to_a).to eq([user])
+      expect(client.user_ids).to eq([user.id])
+      expect(client.users.first.clients.first).to eq(client)
       client.user_ids = []
       client.save
-      Client.find(client.id).users.should == []
+      expect(Client.find(client.id).users).to eq([])
       client.user_ids = [user.id]
       client.save
-      Client.find(client.id).users.should == [user]
+      expect(Client.find(client.id).users).to eq([user])
     end
 
     it "can remove associated objects" do
@@ -37,18 +37,18 @@ describe ActiveNode::Associations do
       client.save
       client.user_ids = []
       client.save
-      client.users.should be_empty
-      client.user_ids.should be_empty
+      expect(client.users).to be_empty
+      expect(client.user_ids).to be_empty
     end
 
     it "returns nil on a has_one association for a brand spanking new model object" do
       person = Person.new
-      person.father.should be_nil
+      expect(person.father).to be_nil
     end
 
     it "returns nil on a has_one association where nothing is associated" do
       person = Person.create!
-      person.father.should be_nil
+      expect(person.father).to be_nil
     end
 
     it "can remove some of the associated objects" do
@@ -56,10 +56,10 @@ describe ActiveNode::Associations do
       child2 = Person.create!
       person = Person.create! child_ids: [child1.id, child2.id]
       person = Person.find(person.id)
-      person.children.count.should == 2
+      expect(person.children.count).to eq(2)
       person.child_ids = [child2.id]
       person.save
-      Person.find(person.id).children.should == [child2]
+      expect(Person.find(person.id).children).to eq([child2])
     end
 
     it "can remove and add some of the associated objects" do
@@ -67,11 +67,11 @@ describe ActiveNode::Associations do
       child2 = Person.create!
       person = Person.create! child_ids: [child1.id, child2.id]
       person = Person.find(person.id)
-      person.children.count.should == 2
+      expect(person.children.count).to eq(2)
       child3 = Person.create!
       person.child_ids = [child2.id, child3.id]
       person.save
-      Person.find(person.id).children.should == [child2, child3]
+      expect(Person.find(person.id).children).to eq([child2, child3])
     end
 
     it 'can handle self referencing' do
@@ -80,12 +80,12 @@ describe ActiveNode::Associations do
       person.people = [person]
       person.save
       person.people.first == person
-      Person.count.should == 1
+      expect(Person.count).to eq(1)
     end
 
     it 'can handle reference to the same class' do
       id = Person.create!(children: [Person.create!, Person.create!]).id
-      Person.find(id).children.size.should == 2
+      expect(Person.find(id).children.size).to eq(2)
     end
 
     it 'can set has_one relation' do
@@ -93,7 +93,7 @@ describe ActiveNode::Associations do
       child = Person.create!
       child.father = father
       child.save
-      father.children.should == [child]
+      expect(father.children).to eq([child])
     end
 
     it 'can set has_one relation by id' do
@@ -101,19 +101,19 @@ describe ActiveNode::Associations do
       child = Person.create!
       child.father_id = father.id
       child.save
-      father.children.should == [child]
+      expect(father.children).to eq([child])
     end
 
     it 'can set has_one relationship by id at creation time' do
       father = Person.create!
       child = Person.create! father_id: father.id
-      father.children.should == [child]
+      expect(father.children).to eq([child])
     end
 
     it 'does not set has_one relationship by id if id is blank' do
       father = Person.create!
       child = Person.create! father_id: nil
-      father.children.should be_empty
+      expect(father.children).to be_empty
     end
 
     it 'can remove has_one relationship' do
@@ -121,7 +121,7 @@ describe ActiveNode::Associations do
       child = Person.create! father: father
       child.father = nil
       child.save
-      Person.find(child.id).father.should be_nil
+      expect(Person.find(child.id).father).to be_nil
     end
 
     it 'can read has_one relation by id' do
@@ -129,19 +129,19 @@ describe ActiveNode::Associations do
       child = Person.create!
       child.father = father
       child.save
-      child.father_id.should == father.id
+      expect(child.father_id).to eq(father.id)
     end
 
     it "can access new association without being saved" do
       father = Person.create!
       child = Person.new
       child.father = father
-      child.father.should == father
+      expect(child.father).to eq(father)
     end
 
     it 'can handle has_one reverse relationship' do
       father = Person.create!(children: [Person.create!])
-      father.children.first.father.should == father
+      expect(father.children.first.father).to eq(father)
     end
 
     it 'returns relationships to related nodes' do
@@ -150,7 +150,7 @@ describe ActiveNode::Associations do
       person = Person.create! child_ids: [child1.id, child2.id]
       person.save
       person = Person.find(person.id)
-      person.child_rels.map(&:other).should == person.children
+      expect(person.child_rels.map(&:other)).to eq(person.children)
     end
 
     it 'relationship should include property' do
@@ -158,7 +158,7 @@ describe ActiveNode::Associations do
       client.address_rel=ActiveNode::Relationship.new(Address.create!, address_type: 'home')
       client.save
       client = Client.find(client.id)
-      client.address_rel[:address_type].should == 'home'
+      expect(client.address_rel[:address_type]).to eq('home')
     end
 
     it 'should save updated property on relationship' do
@@ -170,13 +170,13 @@ describe ActiveNode::Associations do
       client.save
       client=Client.find(client.id)
       ar=client.address_rel
-      ar[:address_type].should == 'office'
+      expect(ar[:address_type]).to eq('office')
     end
 
     it 'should retrieve multiple relationships at once' do
       address = Address.create!
       person = Person.create! children: [Person.create!(address: address)]
-      Person.find(person.id).children(:address).first.address.should == address
+      expect(Person.find(person.id).children(:address).first.address).to eq(address)
     end
 
     it 'should handle simultaneous updates to father and children' do
@@ -186,7 +186,7 @@ describe ActiveNode::Associations do
       father = Person.includes(:children).find(father.id)
       father.children.first.update_attributes(father: nil)
       father.update_attributes(name: "John")
-      Person.find(father.id).children.should be_empty?
+      expect(Person.find(father.id).children).to be_empty?
     end
   end
 end
