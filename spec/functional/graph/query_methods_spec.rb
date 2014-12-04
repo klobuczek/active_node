@@ -1,5 +1,3 @@
-require 'spec_helper'
-
 describe ActiveNode::QueryMethods do
   describe "#order" do
     it "should order" do

@@ -6,6 +6,7 @@ module ActiveNode
     include ActiveAttr::BasicModel
     include ActiveAttr::Attributes
     include ActiveAttr::MassAssignment
+    include ActiveAttr::AttributeDefaults
     include ActiveAttr::TypecastedAttributes
     include Typecasting
     include Dirty

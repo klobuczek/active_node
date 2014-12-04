@@ -1,5 +1,3 @@
-require 'spec_helper'
-
 describe ActiveNode::Base do
   describe ".subclass" do
     it "should be ActiveNode::Base" do

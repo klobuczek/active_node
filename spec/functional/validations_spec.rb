@@ -1,5 +1,3 @@
-require 'spec_helper'
-
 describe ActiveNode::Validations do
   describe "#save" do
     it "should not save invalid object" do

@@ -1,5 +1,3 @@
-require 'spec_helper'
-
 describe ActiveNode::Persistence do
   describe "#save" do
     it "should save an object" do
@@ -9,9 +7,9 @@ describe ActiveNode::Persistence do
 
     it "should not set id property" do
       a = Address.create!
-      expect(ActiveNode::Neo.db.get_node_properties(a.id)).to be_nil
+      expect(ActiveNode::Neo.db.get_node_properties(a.id)['id']).to be_nil
       a.save
-      expect(ActiveNode::Neo.db.get_node_properties(a.id)).to be_nil
+      expect(ActiveNode::Neo.db.get_node_properties(a.id)['id']).to be_nil
     end
 
     it "should save unconventionally named object" do
@@ -168,6 +166,12 @@ describe ActiveNode::Persistence do
   end
 
   describe "default" do
+    it "should default new object" do
+      expect(Address.new.city).to eq "New York"
+    end
 
+    it "should default created object" do
+      expect(Address.create!.city).to eq "New York"
+    end
   end
 end

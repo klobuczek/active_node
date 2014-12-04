@@ -1,5 +1,3 @@
-require 'spec_helper'
-
 describe ActiveNode::Associations do
   describe "#save" do
     it "should have empty association" do

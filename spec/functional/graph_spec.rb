@@ -1,5 +1,3 @@
-require 'spec_helper'
-
 describe ActiveNode::Graph do
   describe "#path" do
     it "should parse includes" do
