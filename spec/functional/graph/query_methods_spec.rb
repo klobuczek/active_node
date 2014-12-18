@@ -16,4 +16,13 @@ describe ActiveNode::QueryMethods do
       expect(Person.limit(1)).to eq([p1])
     end
   end
+
+  describe "#count" do
+    it "should respect block passed to count" do
+      Person.create!(name: 'abc')
+      expect(Person.count).to eq(1)
+      expect(Person.count{|p| p.name == 'abc'}).to eq(1)
+      expect(Person.count{|p| p.name != 'abc'}).to eq(0)
+    end
+  end
 end

@@ -34,10 +34,6 @@ module ActiveNode
       self
     end
 
-    def count
-      to_a.count
-    end
-
     def includes *includes
       @includes += includes
       self
