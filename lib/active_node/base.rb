@@ -8,6 +8,7 @@ module ActiveNode
     include ActiveAttr::MassAssignment
     include ActiveAttr::AttributeDefaults
     include ActiveAttr::TypecastedAttributes
+    include ActiveModel::Serializers::JSON
     include Typecasting
     include Dirty
     include Persistence
