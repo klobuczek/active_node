@@ -166,23 +166,45 @@ module ActiveNode
 
     def parse_results data
       @records = data.reduce(Set.new) { |set, record| set << wrap(record.first, @klass) }.to_a
-      alternate_cells(data, 2) { |node, reflection| wrap node, reflection.klass }
-      alternate_cells(data, 1) { |rel, reflection| wrap_rel [rel].flatten.last, reflection }
+      parse_nodes(data)
+      parse_relationships(data)
       @loaded = true
     end
 
-    def alternate_cells data, shift
-      data.each do |row|
-        @reflections.each_with_index do |reflection, index|
-          cell = row[2*index + shift]
-          yield cell, reflection if cell
+    def parse_nodes(data)
+      each_row_reflection_with_index(data) do |row, reflection, index|
+        node = row[index+2]
+        wrap node, reflection.klass if node.present?
+      end
+    end
+
+    def parse_relationships(data)
+      each_row_reflection_with_index(data) do |row, reflection, index|
+        rel = row[index+1]
+        if rel.nil?
+          node = row[index]
+          add_empty_assoc(node, reflection) if node
+        elsif rel.present?
+          wrap_rel [rel].flatten.last, reflection
         end
       end
+    end
+
+    def each_row_reflection_with_index(data)
+      data.each { |row| @reflections.each_with_index { |reflection, index| yield row, reflection, 2*index } }
     end
 
     def previously_loaded?(assoc)
       @loaded_assoc_cache[assoc] = assoc.rel_target unless @loaded_assoc_cache.key? assoc
       @loaded_assoc_cache[assoc]
+    end
+
+    def add_empty_assoc(record, reflection)
+      association(extract_id(record), reflection).rels_loader []
+    end
+
+    def association(node_id, reflection)
+      @object_cache[node_id].association(reflection.name)
     end
 
     def wrap(record, klass)
@@ -195,8 +217,8 @@ module ActiveNode
 
     def create_rel(rel, reflection)
       ActiveNode::Relationship.new(@object_cache[node_id rel, reflection, :other], data(rel)).tap do |relationship|
-        assoc = @object_cache[node_id rel, reflection, :owner].association(reflection.name)
-        assoc.rels_writer((assoc.rel_target || []) << relationship) unless previously_loaded?(assoc)
+        assoc = association(node_id(rel, reflection, :owner), reflection)
+        assoc.rels_loader((assoc.rel_target || []) << relationship) unless previously_loaded?(assoc)
       end
     end
 

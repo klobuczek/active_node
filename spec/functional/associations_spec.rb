@@ -186,5 +186,22 @@ describe ActiveNode::Associations do
       father.update_attributes(name: "John")
       expect(Person.find(father.id).children).to be_empty?
     end
+
+    it 'should respect object identity on retrieval with includes' do
+      child1 = Person.create!
+      father = Person.create! children: [child1]
+      father = Person.includes(children: :father).find(father.id)
+      father.update_attributes(name: "John")
+      expect(father.children.first.father.name).to eq "John"
+    end
+
+    it 'should respect object identity on retrieval on demand' do
+      pending
+      child1 = Person.create!
+      father = Person.create! children: [child1]
+      father = Person.find(father.id)
+      father.children.first.father.update_attributes(name: "John")
+      expect(father.name).to eq "John"
+    end
   end
 end

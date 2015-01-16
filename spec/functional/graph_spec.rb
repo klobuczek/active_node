@@ -22,8 +22,21 @@ describe ActiveNode::Graph do
       expect(g_person.children).to eq([c1, c2])
     end
 
-    it "should not query db twice" do
-      pending
+    it "should not query db twice non empty associations" do
+      person = Person.create!(children: [Person.create!])
+      person = Person.includes(:children).find(person.id)
+      expect(ActiveNode::Neo).not_to receive(:db)
+      person.children
+    end
+
+    it "should not query db twice empty associations" do
+      person = Person.create!
+      person.children
+      expect(ActiveNode::Neo).not_to receive(:db)
+      person.children
+    end
+
+    it "should not query db twice empty associations after load with includes" do
       person = Person.create!
       person.includes! :children
       expect(ActiveNode::Neo).not_to receive(:db)
@@ -51,10 +64,15 @@ describe ActiveNode::Graph do
 
     it "should return correct associated objects" do
       child1 = Person.create! children: [Person.create!, Person.create!]
-      person = Person.create! children: [child1]
+      address = Address.create!
+      person = Person.create! children: [child1], address: address
       expect(Person.includes(children: :children).find(person.id).children).to eq([child1])
       expect(Person.includes(children: 2).find(person.id).children).to eq([child1])
       expect(Person.includes(children: '*').find(person.id).children).to eq([child1])
+      expect(Person.includes(children: '*0..').find(person.id).children).to eq([child1])
+      person = Person.includes({children: '*0..'} => :address).find(person.id)
+      expect(ActiveNode::Neo).not_to receive(:db)
+      expect(person.address).to eq(address)
     end
   end
 end

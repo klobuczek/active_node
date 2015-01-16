@@ -41,6 +41,7 @@ module ActiveNode
       end
 
       def rel(*associations)
+        @loaded = true
         owner.includes!(reflection.name => associations)
       end
 
@@ -53,7 +54,7 @@ module ActiveNode
       end
 
       def validate_type(records)
-        unless records.all? {|r| r.is_a?(reflection.klass)}
+        unless records.all? { |r| r.is_a?(reflection.klass) }
           raise ArgumentError, "#{reflection.name} can only accept object(s) of class #{reflection.klass}"
         end
       end
@@ -78,14 +79,19 @@ module ActiveNode
 
 
       def rels_reader(*args)
-        rel(*args) unless @rel_target
+        rel(*args) unless @loaded
         @rel_target ||= []
       end
 
       def rels_writer(rels)
-        @target = nil
         @dirty = true
+        rels_loader(rels)
+      end
+
+      def rels_loader(rels)
+        @target = nil
         @rel_target = rels
+        @loaded = true
       end
 
       def save(fresh=false)
