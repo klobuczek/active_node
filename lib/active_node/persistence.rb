@@ -55,6 +55,21 @@ module ActiveNode
         end
       end
 
+      def to_neo! attrs
+        attrs.each { |k, v| attrs[k] = to_neo v }
+      end
+
+      def to_neo value
+        case value
+          when Time, DateTime
+            value.utc.iso8601(3)
+          when Date
+            value.to_s
+          else
+            value
+        end
+      end
+
       private
       def new_instance node, klass=nil
         node && (klass || find_suitable_class(Neo.db.get_node_labels(node))).try(:new, data(node), :declared?)
@@ -195,7 +210,7 @@ module ActiveNode
     end
 
     def write
-      now = to_neo(Time.now)
+      now = self.class.to_neo(Time.now)
       try :updated_at=, now
       if persisted?
         write_properties
@@ -215,22 +230,7 @@ module ActiveNode
     end
 
     def all_attributes
-      to_neo! attributes.except('id').merge(@hash)
-    end
-
-    def to_neo! attrs
-      attrs.each { |k, v| attrs[k] = to_neo v }
-    end
-
-    def to_neo value
-      case value
-        when Time, DateTime
-          value.utc.iso8601(3)
-        when Date
-          value.to_s
-        else
-          value
-      end
+      self.class.to_neo! attributes.except('id').merge(@hash)
     end
   end
 end
