@@ -149,7 +149,9 @@ module ActiveNode
     end
 
     def initial_match
-      "match (n0#{label @klass})"
+      # "PLANNER RULE match (n0#{label @klass})"
+      # Temporary fix while waiting for neo4j 2.2.2
+      "CYPHER 2.1 match (n0#{label @klass})"
     end
 
     def execute
