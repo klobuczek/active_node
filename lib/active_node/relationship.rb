@@ -27,7 +27,7 @@ module ActiveNode
         end
         @id = get_id(Neo.db.create_relationship(association.reflection.type, from.id, to.id, @hash)).to_i
       else
-        Neo.db.reset_relationship_properties(id, @hash)
+        Neo.db.reset_relationship_properties(id, @hash.select { |_, v| v.present? })
       end
     end
 

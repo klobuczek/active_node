@@ -169,6 +169,9 @@ describe ActiveNode::Associations do
       client=Client.find(client.id)
       ar=client.address_rel
       expect(ar[:address_type]).to eq('office')
+      ar[:address_type] = nil
+      client.save
+      expect(Client.find(client.id).address_rel[:address_type]).to be_nil
     end
 
     it 'should retrieve multiple relationships at once' do
