@@ -47,10 +47,15 @@ module ActiveNode
 
       # Implements the writer method, e.g. foo.items= for Foo.has_many :items
       def writer(records)
+        records = load_ids(records)
         validate_type(records)
         @dirty = true
         @rel_target = nil
         @target = records
+      end
+
+      def load_ids(records)
+        records.map {|r| ActiveNode::Base === r ? r : reflection.klass.find(r)}
       end
 
       def validate_type(records)
@@ -64,7 +69,7 @@ module ActiveNode
       # Implements the ids writer method, e.g. foo.item_ids= for Foo.has_many :items
       def ids_writer(ids)
         @rel_target = nil
-        super_writer klass.find(ids.reject(&:blank?).map!(&:to_i))
+        super_writer klass.find(ids.reject(&:blank?))
       end
 
       def reader(*args)

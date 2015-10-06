@@ -28,6 +28,18 @@ describe ActiveNode::Associations do
       expect(Client.find(client.id).users).to eq([user])
     end
 
+    it "can send id to association" do
+      user = NeoUser.create!(name: 'Heinrich')
+      client = Client.create!(name: 'a', users: [user.id])
+      expect(client.users.to_a).to eq([user])
+    end
+
+    it "can send node to association_id" do
+      user = NeoUser.create!(name: 'Heinrich')
+      client = Client.create!(name: 'a', user_ids: [user])
+      expect(client.users.to_a).to eq([user])
+    end
+
     it "can remove associated objects" do
       user = NeoUser.new(name: 'Heinrich')
       user.save

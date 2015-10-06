@@ -62,6 +62,7 @@ describe ActiveNode::Persistence do
     it 'should not record timestamp if not specified' do
       expect(Client.create!(name: 'abc').respond_to?(:created_at)).to be_falsey
     end
+
   end
 
   describe "#destroyed?" do
