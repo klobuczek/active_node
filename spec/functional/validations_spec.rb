@@ -27,4 +27,19 @@ describe ActiveNode::Validations do
       expect(House.find(house.id)).to be_valid
     end
   end
+
+  describe "#create" do
+    it "should not create invalid object" do
+      expect(Client.create).not_to be_persisted
+    end
+
+    it "should create valid object" do
+      expect(Client.create(name: 'abc7')).to be_persisted
+      expect(Client.all.first.name).to eq('abc7')
+    end
+
+    it "should create an instance of the model class" do
+      expect(Client.create(name: 'abc7')).to be_a(Client)
+    end
+  end
 end
