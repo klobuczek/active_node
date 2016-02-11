@@ -1,7 +1,7 @@
 language: ruby
 cache: bundler
 rvm:
-  - 2.1.2
+  - 2.2.2
 script: "bundle exec rake neo4j:install['enterprise','2.3.2'] neo4j:unsecure neo4j:start spec --trace"
 addons:
   code_climate:
