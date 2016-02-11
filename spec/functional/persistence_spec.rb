@@ -149,6 +149,9 @@ describe ActiveNode::Persistence do
       p=Person.create!(name: 'abc', address: a)
       c=Client.create!(name: 'client', address: a)
       expect(a.incoming(:address)).to include(p, c)
+      #but
+      expect(a.person).to eq(p)
+      expect(a.client).to eq(c)
     end
   end
 
