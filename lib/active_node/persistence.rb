@@ -104,6 +104,10 @@ module ActiveNode
       id.to_s if persisted?
     end
 
+    def hash
+      persisted? ? [self.class, id].hash : super
+    end
+
     def persisted?
       id.present? && !destroyed?
     end

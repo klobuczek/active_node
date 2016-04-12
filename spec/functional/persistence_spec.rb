@@ -178,4 +178,24 @@ describe ActiveNode::Persistence do
       expect(Address.create!.city).to eq "New York"
     end
   end
+
+  describe "eql?" do
+    before :each do
+      Client.create!(name: 'abc')
+    end
+
+    it "should be equal" do
+      expect(Client.first).to eq Client.first
+    end
+  end
+
+  describe "hash" do
+    before :each do
+      Client.create!(name: 'abc')
+    end
+
+    it "should be equal" do
+      expect(Client.first.hash).to eq Client.first.hash
+    end
+  end
 end
