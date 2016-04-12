@@ -105,7 +105,7 @@ module ActiveNode
     end
 
     def hash
-      persisted? ? [self.class, id].hash : super
+      persisted? ? self.class.hash ^ id.hash : super
     end
 
     def persisted?
