@@ -6,7 +6,7 @@ ActiveNode
 - [![Code Climate](https://codeclimate.com/github/klobuczek/active_node.png)](https://codeclimate.com/github/klobuczek/active_node)
 - [![Coverage Status](https://coveralls.io/repos/klobuczek/active_node/badge.png?branch=master)](https://coveralls.io/r/klobuczek/active_node?branch=master)
 
-The gem is not actively maintained anymore. Consider migrating to https://github.com/neo4jrb/neo4j
+This gem is not actively maintained anymore. Consider migrating to https://github.com/neo4jrb/neo4j
 
 ActiveNode is object graph mapping layer for neo4j deployed as standalone server. It is implemented on top of [neography](http://github.com/maxdemarzi/neography) by Max De Marzi.
 
